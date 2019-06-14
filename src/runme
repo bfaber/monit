@@ -1,0 +1,1 @@
+./a.out -h 127.0.0.1 -p 27017 -l /Users/bfaber/Desktop/persephony/50kATC401.dat -r "^.*requestId\\\"\:\\\"(RQ[a-z0-9]{40}).*$" -c "requestId"

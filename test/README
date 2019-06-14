@@ -1,0 +1,13 @@
+using googletest:
+
+use ASSERT_* when doens't make sense to continue the test/function
+use EXPECT_* when just want to note a failure but continue test/function
+eg.
+ASSERT_EQ(x.size(), y.size()) << "Vectors x and y are of unequal length";
+
+for (int i = 0; i < x.size(); ++i) {
+  EXPECT_EQ(x[i], y[i]) << "Vectors x and y differ at index " << i;
+}
+
+<< is a way to send custom error messages to the macro when a test fails
+

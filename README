@@ -1,0 +1,40 @@
+
+The log reader/writer is a process that will parse a log given some regular expressions and generate a csv and use that csv to insert those values under the appropriate key/type in mongo.  Configuration would be specified in the target storage DB, and parsed from there when the process sets itself up.
+
+./LRW --mongo=192.0.0.1 --port 27017
+
+Config in the db will be a row indicating regex to be applied to each line of the log, and then the assignment of those groups to a "column" with a type.
+TODO:regex has to be clear about if greedy or not, this readme should specify and provide examples. 
+{regex:"^(//timestamp regex).*user=(//usr regex)... etc", csv:"..."}
+
+
+Usage:
+./a.out -h 127.0.0.1 -p 27017 -l /Users/bfaber/Desktop/persephony/50kATC401.dat -r "^.*accountid\"\:(AC[a-z0-9]{40}).*$" -c "accountId"
+
+Notes on regex:
+regex not greedy?  How to use easily with groups?
+
+
+BUILD NOTES:
+clang++ -g -std=c++11 logreader.cc csvprocessor.cc logreadertest.cc -lpcre -lgtest -I/usr/local/include/pcre.h -I/Users/bfaber/Desktop/play/cpp/googletest/googletest/googletest/include
+
+
+
+clang++ -std=c++11 logreader.cc csvprocessor.cc main.cc -lpcre -I/usr/local/include/pcre.h
+
+but maybe this: not necessary right now 6/12
+clang++ -stdlib=libc++ -std=c++11 logreader.cc csvprocessor.cc main.cc -L/usr/lib -lpcre -I/usr/local/include/pcre.h
+
+
+googletest header files:
+/Users/bfaber/Desktop/play/cpp/googletest/googletest/googletest/include
+
+googletest archive:
+/Users/bfaber/Desktop/play/cpp/googletest/googletest/mybuild/lib/
+bfaber-ltm:lib bfaber$ ll
+total 2856
+-rw-r--r--  1 bfaber  staff   339392 Jun 11 17:06 libgmock.a
+-rw-r--r--  1 bfaber  staff     6928 Jun 11 17:06 libgmock_main.a
+-rw-r--r--  1 bfaber  staff  1108488 Jun 11 17:06 libgtest.a
+-rw-r--r--  1 bfaber  staff     1448 Jun 11 17:06 libgtest_main.a
+
