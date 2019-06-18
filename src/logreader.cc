@@ -3,10 +3,11 @@
 
 #include "logreader.h"
 
-LogReader::LogReader(const char* filename, const char* regex, CSVProcessor *csvprocessor) :
+LogReader::LogReader(const char* filename, const char* regex, MatchProcessor *csvprocessor) :
     threadStarted(false),
     threadStopped(false),
-    logfilename(filename),
+    shutdown(false),
+    logfilename(strdup(filename)),
     regex(regex)  {
     
     // TODO: need to parse errors if exist, and probably wrap the construction of
@@ -47,14 +48,22 @@ LogReader::LogReader(LogReader const &other) {
 LogReader::~LogReader() {
     if(logfile.is_open())
 	logfile.close();
+    printf("deleting log reader!\n");
     delete logfilename;
+    logfilename = nullptr;
     delete regex;
+    regex = nullptr;
 }
 
-void LogReader::start(LogReader *inst) {    
+std::thread LogReader::start(LogReader *inst) {    
     std::thread th(*inst);
-        //th.detach();
-	th.join();
+    return th;
+}
+
+void LogReader::shutdownThread() {
+    mutex.lock();
+    shutdown = true;
+    mutex.unlock();
 }
 
 void LogReader::operator()() {
@@ -71,7 +80,8 @@ bool LogReader::readFile() {
     printf("reading file!\n");
     std::string line;
     int linect = 0;
-    std::vector<const char*> *matches = new std::vector<const char*>();
+    // TODO: fix this, use move somehow
+    std::vector<const char*> *matches = new std::vector<const char*>(); 
 
     printf("logfilename: %s\n", logfilename);
     logfile.open(logfilename, std::ios_base::in);

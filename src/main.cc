@@ -74,7 +74,13 @@ int main(int argc, char** argv) {
     // this setup allows easier refactor to have multiple log readers per log processor
     auto *lp = new CSVProcessor(csv.c_str());
     auto *lr = new LogReader(logfile.c_str(), regex.c_str(), lp);
-    LogReader::start(lr); // fires off logReader thread for that instance
+    auto lrTh = LogReader::start(lr); // fires off logReader thread for that instance
+    auto lpTh = CSVProcessor::start(lp);
+
+    lrTh.join(); // this should clean up first, then the processor thread
+    lpTh.join();
+    
+    
     //    CSVProcessor::start(lp); // fires off processor thread for processing events
     delete lp;
     delete lr;

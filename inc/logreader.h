@@ -4,6 +4,8 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <thread>
+#include <mutex>
 
 #include "pcre.h"
 #include "csvprocessor.h"
@@ -11,20 +13,23 @@
 class LogReader {
 
 public:
-    LogReader(const char* filename, const char* regex, CSVProcessor *p);
+    LogReader(const char* filename, const char* regex, MatchProcessor *p);
     LogReader(LogReader&& lr);
     LogReader(LogReader const &lr);
     ~LogReader();
 
     void operator()();
-    static void start(LogReader *inst);
+    static std::thread start(LogReader *inst);
+    void shutdownThread();
     
 private:
+    std::mutex mutex;
+    bool shutdown;
     
     const char* logfilename;
     std::ifstream logfile;
 
-    CSVProcessor* processor;
+    MatchProcessor* processor;
     const char* regex;
     const pcre* compiled_regex;
 
