@@ -20,7 +20,7 @@ class CSVProcessor : public MatchProcessor {
     void shutdownThread();
     
     void receiveMatches(std::vector<const char*> *matches) override;
-    std::vector<const char*>* getMatches();
+    std::vector<const char*>* getMatches() override;
     
 private:
     std::thread thread;

@@ -15,7 +15,7 @@ LIB_DIR = -L$(GTEST_LIB_DIR) -L$(MONIT_LIB_DIR)
 
 CFLAGS = -g -Wall -std=c++11 -I$(INC_DIR) -I$(PCRE_INC) -I$(GTEST_INC)
 
-_OBJ = logreadertest.o
+_OBJ = logreadertest.o testprocessor.o
 OBJ = $(patsubst %,$(OBJ_DIR)/%,$(_OBJ))
 
 $(OBJ_DIR)/%.o: %.cc $(DEPS)

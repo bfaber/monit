@@ -45,8 +45,7 @@ void CSVProcessor::shutdownThread() {
 void CSVProcessor::receiveMatches(std::vector<const char*> *matches) {
 
     printf("len of matches %d\n", matches->size());
-    this->matches = matches;
-        
+    this->matches = matches;        
 }
 
 void CSVProcessor::processMatches() {
@@ -54,5 +53,6 @@ void CSVProcessor::processMatches() {
 }
 
 std::vector<const char*>* CSVProcessor::getMatches() {
+    printf("getmatches %d\n", matches->size());
     return matches;
 }
