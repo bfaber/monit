@@ -13,10 +13,10 @@ LIB_DIR = -L$(GTEST_LIB_DIR)
 
 CFLAGS = -g -Wall -std=c++11 -I$(INC_DIR) -I$(PCRE_INC) -I$(GTEST_INC)
 
-_DEPS = logreader.h csvprocessor.h
+_DEPS = logreader.h csvprocessor.h util.h
 DEPS = $(patsubst %,$(INC_DIR)/%,$(_DEPS))
 
-_OBJ = csvprocessor.o logreader.o main.o
+_OBJ = csvprocessor.o logreader.o util.o main.o
 OBJ = $(patsubst %,$(OBJ_DIR)/%,$(_OBJ))
 
 
@@ -27,8 +27,8 @@ monit: $(OBJ)
 	$(CC) -o $@ $^ $(CFLAGS) $(LIBS) $(LIB_DIR)
 
 # for testing
-libmonit.a: obj/csvprocessor.o obj/logreader.o
-	ar rcs libmonit.a obj/csvprocessor.o obj/logreader.o
+libmonit.a: obj/csvprocessor.o obj/logreader.o obj/util.o
+	ar rcs libmonit.a obj/csvprocessor.o obj/logreader.o obj/util.o
 
 test: libmonit.a
 

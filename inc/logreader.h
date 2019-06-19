@@ -11,6 +11,7 @@
 #include "csvprocessor.h"
 
 class LogReader {
+    friend class LogReaderTest;
 public:
     LogReader(const char* filename, const char* regex, MatchProcessor *p);
     LogReader(LogReader&& lr);
@@ -20,7 +21,7 @@ public:
     void operator()();
     static std::thread start(LogReader *inst);
     void shutdownThread();
-    void testReadFile(); // to be used by test harness
+
 private:
 
     std::mutex mutex;

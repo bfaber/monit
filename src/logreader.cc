@@ -71,9 +71,6 @@ void LogReader::operator()() {
     printf("hello world\n");
 }
 
-void LogReader::testReadFile() {
-    readFile();
-}
 /**
  * Read the file line by line, parse each line with regex, capturing whatever groups exist.
  * Group count given by pcre_exec return value (rc).  
