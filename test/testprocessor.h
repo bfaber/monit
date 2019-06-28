@@ -7,6 +7,7 @@
 class TestProcessor : public MatchProcessor {
 public:
     TestProcessor(const char* csv) : csv(strdup(csv)) {};
+		
 
     virtual void receiveMatches(std::vector<const char*> *matches) override;
     virtual std::vector<const char*>* getMatches() override;

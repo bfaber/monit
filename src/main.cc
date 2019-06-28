@@ -8,6 +8,10 @@
 int main(int argc, char** argv) {
     printf("Parsing options...\n");
     int option;
+    std::string mongohost;
+    int mongoport;
+    std::string configCollectionName;
+    std::string dbName;
     std::string logfile;
     std::string regex;
     std::string csv;
@@ -17,6 +21,8 @@ int main(int argc, char** argv) {
 	static struct option long_options[] = {
 	       {"mongo_host", required_argument, 0, 'h'},
 	       {"mongo_port", required_argument, 0, 'p'},
+	       {"coll_name", required_argument, 0, 't'},
+	       {"db_name", required_argument, 0, 'd'},
 	       {"logfile", required_argument, 0, 'l'},
 	       {"regex", required_argument, 0, 'r'},
 	       {"csv", required_argument, 0, 'c'},
@@ -31,22 +37,32 @@ int main(int argc, char** argv) {
 
 	switch(option) {
 	  case 'h':
-	    printf("got host: %s\n", optarg);
-	    break;
+	      printf("got host: %s\n", optarg);
+	      mongohost = std::string(optarg);
+	      break;
+	  case 't':
+	      printf("got collection name: %s\n", optarg);
+	      configCollectionName = std::string(optarg);
+	      break;
+	  case 'd':
+	      printf("got db name: %s\n", optarg);
+	      dbName = std::string(optarg);
+	      break;
      	  case 'p':
-	    printf("got port: %d\n", atoi(optarg));
-	    break;
+	      mongoport = atoi(optarg);
+	      printf("got port: %d\n", mongoport);
+	      break;
 	  case 'l':
 	    printf("logfile: %s\n", optarg);
 	    logfile = optarg;
 	    break;
 	  case 'r':
 	    printf("regex: %s\n", optarg);
-	    regex = optarg;
+	    regex = std::string(optarg);
 	    break;
 	  case 'c':
 	    printf("csv: %s\n", optarg);
-	    csv = optarg;
+	    csv = std::string(optarg);
 	    break;
 
 	  default:
@@ -70,10 +86,18 @@ int main(int argc, char** argv) {
     // producer.join();
     // consumer.join();
 
+    // pull config from the db.
+    auto *mi = new MongoInterface(mongohost, mongoport, dbName);
+    auto *ms = new MongoSpooler(mi);
+
+    std::vector<ConfigItem*> *configs = mi->getConfigs(configCollectionName);
 
     // this setup allows easier refactor to have multiple log readers per log processor
-    auto *lp = new CSVProcessor(csv.c_str());
-    auto *lr = new LogReader(logfile.c_str(), regex.c_str(), lp);
+    // actually only have one log reader but have it handle multiple files
+    // and multiple regexes. 
+    auto *lp = new CSVProcessor(ms);
+    auto *lr = new LogReader(configs, lp);
+
     auto lrTh = LogReader::start(lr); // fires off logReader thread for that instance
     auto lpTh = CSVProcessor::start(lp);
 

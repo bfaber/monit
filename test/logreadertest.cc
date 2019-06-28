@@ -3,6 +3,8 @@
 #include "util.h"
 #include "gtest/gtest.h"
 
+#include <unistd.h>
+
 class LogReaderTest : public ::testing::Test {
 public:
 
@@ -17,9 +19,7 @@ public:
 	printf("set up!\n");
 	processor = new TestProcessor("requestId");
 	reader = new LogReader("/Users/bfaber/Desktop/persephony/50kATC401.dat", "^.*requestId\\\"\:\\\"(RQ[a-z0-9]{40}).*$", processor);
-		reader->readFile();
-
-
+	reader->readFile();
     };
     
     void TearDown() override  {

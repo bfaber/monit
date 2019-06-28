@@ -5,14 +5,29 @@ The log reader/writer is a process that will parse a log given some regular expr
 
 Config in the db will be a row indicating regex to be applied to each line of the log, and then the assignment of those groups to a "column" with a type.
 TODO:regex has to be clear about if greedy or not, this readme should specify and provide examples. 
-{regex:"^(//timestamp regex).*user=(//usr regex)... etc", csv:"..."}
 
+{matchItemName:"logins", regex:"^(//timestamp regex).*user=(//usr regex)... etc", csv:"...", collectionName:"logins", realTimeEndpoint:"http://analyticsEndpoint/logins", filename:"/path/to/the/logfile"}
+
+Config matchItemName should be same as collectionName (by convention), but can be different.
+The configitem will be parsed by system on startup and made available to the LogReader and CSVProcessor instances for processing.
+The LogReader will use the configitem to determine what to look for per log line.
+The CSVProcessor will use the configitem to bundle the resulting matchItems and route to the spooler.
+The Spooler(s) are essentially static interfaces which encapsulate only the connection to db but will unpack the matchitems into a batched insert.
+
+Config should also specify collection name for this regex(see ex above).
+Upon startup this is pulled out into the process and each regexitem is run against each line in the log.  We'll see how the performance goes here (pcre has 'pcretest' which can help understand performance of regex.  Also should think about adding some functionality to pre-check the regexes provided and let the user know if any of them should be tuned.  Also should provide some guidelines for what makes a fast regex to users).  
 
 Usage:
-./a.out -h 127.0.0.1 -p 27017 -l /Users/bfaber/Desktop/persephony/50kATC401.dat -r "^.*accountid\"\:(AC[a-z0-9]{40}).*$" -c "accountId"
+./a.out -h 127.0.0.1 -p 27017 -l /Users/bfaber/Desktop/persephony/50kATC401.dat -r "^.*accountid\"\:(AC[a-z0-9]{40}).*$" -c "accountId" -t "configCollection"
 
 Notes on regex:
 regex not greedy?  How to use easily with groups?
+
+Testing strategy:
+After more clearly defining the interfaces, then build up tests for each?
+
+HA strategy:
+If the process crashes, we should be able to pick back up where we left off and catch up to now-time in the log.  So some notion of log time has to exist, probably via a user supplied time parsing regex, and then the process has to persist the last time events processed to disk.  On restart/startup, it has to look at the time persisted there (if none, use now), and navigate to that place in the log.  
 
 
 BUILD NOTES:

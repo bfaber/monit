@@ -8,15 +8,19 @@ OBJ_DIR = obj
 PCRE_INC = /usr/local/include/pcre.h
 GTEST_INC = /Users/bfaber/Desktop/play/cpp/googletest/googletest/googletest/include
 
-LIBS = -lpcre -lgtest
+MONGO_INC=/usr/local/include/libmongoc-1.0
+BSON_INC=/usr/local/include/libbson-1.0
+
+LIBS = -lpcre -lmongoc-1.0 -lbson-1.0 -lgtest 
 LIB_DIR = -L$(GTEST_LIB_DIR)
 
-CFLAGS = -g -Wall -std=c++11 -I$(INC_DIR) -I$(PCRE_INC) -I$(GTEST_INC)
+CFLAGS = -g -Wall -std=c++11 -I$(INC_DIR) -I$(PCRE_INC) -I$(GTEST_INC) -I$(MONGO_INC) \
+-I$(BSON_INC)
 
-_DEPS = logreader.h csvprocessor.h util.h
+_DEPS = logreader.h csvprocessor.h util.h mongointerface.h mongospooler.h configitem.h matchprocessor.h
 DEPS = $(patsubst %,$(INC_DIR)/%,$(_DEPS))
 
-_OBJ = csvprocessor.o logreader.o util.o main.o
+_OBJ = csvprocessor.o logreader.o util.o main.o mongointerface.o mongospooler.o configitem.o
 OBJ = $(patsubst %,$(OBJ_DIR)/%,$(_OBJ))
 
 
@@ -27,8 +31,8 @@ monit: $(OBJ)
 	$(CC) -o $@ $^ $(CFLAGS) $(LIBS) $(LIB_DIR)
 
 # for testing
-libmonit.a: obj/csvprocessor.o obj/logreader.o obj/util.o
-	ar rcs libmonit.a obj/csvprocessor.o obj/logreader.o obj/util.o
+libmonit.a: obj/csvprocessor.o obj/logreader.o obj/util.o obj/mongospooler.o obj/mongointerface.o obj/configitem.o
+	ar rcs libmonit.a obj/csvprocessor.o obj/logreader.o obj/util.o obj/mongospooler.o obj/mongointerface.o obj/configitem.o
 
 test: libmonit.a
 
