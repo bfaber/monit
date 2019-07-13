@@ -5,13 +5,14 @@
 #include <string>
 #include <mongoc/mongoc.h>
 #include "configitem.h"
+#include "record.h"
 
 class MongoInterface {
 public:
     MongoInterface(std::string host, int port, std::string dbName);
     ~MongoInterface();
     std::vector<ConfigItem*>* getConfigs(std::string collectionName);
-    void insertRecords(std::string query);
+    int insertRecords(std::vector<Record*> &recs);
     
 private:
     ConfigItem* parseConfigFromBson(const bson_t *doc);

@@ -24,6 +24,10 @@ public:
     void shutdownThread();
     bool isThreadStarted();
 
+    // mostly public for testing reasons. 
+    int  findGroups(std::string text, const pcre *comiledRegex, std::vector<std::string> &groups);
+    const pcre* compileRegex(std::string regex);
+
 private:
 
     std::mutex mutex;
@@ -42,5 +46,7 @@ private:
     void startThread();
     void beginLoop();
     bool readFile();
+
+    //    std::map<std::string, ConfigItem*> sortConfigsByFilename(std::vector<ConfigItem*> *configs);
 };
 #endif

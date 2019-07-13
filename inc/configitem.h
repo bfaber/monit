@@ -4,6 +4,14 @@
 #include <string>
 #include "pcre.h"
 
+/*
+ * ConfigItem is a single item of config, ie a single regex.
+ * That regex will have a number of things assoc with it. 
+ * Filename is where that regex is to be run.
+ * Http is the endpoint to be notified, etc. 
+ * 
+ */
+
 class ConfigItem {
 public:
     ConfigItem();
@@ -17,7 +25,8 @@ public:
     void setCollectionName(const char* n);
     void setHttpEndpoint(const char* n);
     void setFileName(const char* n);
-    
+
+    std::string getName();
     std::string getRegex();
     const pcre* getCompiledRegex();
     std::string getCollectionName();

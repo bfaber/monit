@@ -7,3 +7,7 @@ test:
 	test/testmonit
 
 .PHONY: all test clean
+
+clean:
+	cd src && $(MAKE) clean
+	cd test && $(MAKE) clean

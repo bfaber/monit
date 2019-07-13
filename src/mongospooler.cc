@@ -3,21 +3,21 @@
 MongoSpooler::MongoSpooler(MongoInterface *mi) : interface(mi) {
 }
 
-void MongoSpooler::enqueue(std::vector<std::pair<std::string, std::string>> matches) {
+void MongoSpooler::enqueue(std::vector<Record*> &recs) {
     mutex.lock();
-    
-    for(auto match : matches) {
-	matchQueue.push_back(match);
+    for(auto *rec : recs) {
+	recordQueue.push_back(rec);
     }
-    
     mutex.unlock();
 }
 
 // take the collection name, the pairs, and insert into mongo.
-int MongoSpooler::commitToMongo(std::string q) {
-    /*
-    //    interface->insertRecords(query);
+int MongoSpooler::commitToMongo() {
     
+    int result = interface->insertRecords(recordQueue);
+    // clear recordQueue
+    
+	/*
     mongoc_client_t *client;
     mongoc_collection_t *collection;
     mongoc_cursor_t *cursor;

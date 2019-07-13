@@ -29,6 +29,9 @@ void ConfigItem::setFileName(const char* filen) {
     filename = std::string(filen);
 }
 
+std::string ConfigItem::getName() {
+    return name;
+}
 std::string ConfigItem::getRegex() {
     return regex;
 }
@@ -48,14 +51,13 @@ std::string ConfigItem::getFileName() {
     return filename;
 }
 
+// check to see if values set by mongo are here.
 bool ConfigItem::isValid() {
     if(name.size() == 0)
 	return false;
     else if(csv.size() == 0)
 	return false;
     else if(regex.size() == 0)
-	return false;
-    else if(pcreCompiledRegex == nullptr)
 	return false;
     else if(collectionName.size() == 0)
 	return false;

@@ -5,6 +5,7 @@
 #include <vector>
 #include <mutex>
 
+#include "matchbundle.h"
 #include "mongointerface.h"
 /**
  *  Encapsulate Mongo instance data, and interface to mongo
@@ -12,14 +13,16 @@
  */
 class MongoSpooler {
 public:
-    MongoSpooler(MongoInterface *mi);    
-    void enqueue(std::vector<std::pair<std::string, std::string>> matches);
+    MongoSpooler(MongoInterface *mi);
 
+    void enqueue(std::vector<Record*> &recs);
+
+    int commitToMongo();
+    
 private:
     MongoInterface *interface;
     std::mutex mutex;
-    std::vector<std::pair<std::string, std::string>> matchQueue;
-    
-    int commitToMongo(std::string query);
+    std::vector<Record*> recordQueue;    
+
 };
 #endif

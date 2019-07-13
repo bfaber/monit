@@ -8,6 +8,7 @@
 
 #include "matchprocessor.h"
 #include "mongospooler.h"
+#include "matchbundle.h"
 
 class CSVProcessor : public MatchProcessor {
 
@@ -21,15 +22,15 @@ class CSVProcessor : public MatchProcessor {
     static std::thread start(CSVProcessor *inst);
     void shutdownThread();
     
-    void receiveMatches(std::vector<const char*> *matches) override;
-    std::vector<const char*>* getMatches() override;
+    void receiveMatches(MatchBundle *matches) override;
+    size_t getMatchBufferSize() override;
     
 private:
     std::thread thread;
     std::mutex mutex;
     bool shutdown;
     void processMatches();
-    std::vector<const char*> *matches;
+    std::vector<MatchBundle*> matchBuffer;
     MongoSpooler *spooler;
 
 };

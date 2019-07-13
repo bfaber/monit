@@ -1,7 +1,7 @@
+#include <sstream>
 
 #include "mongointerface.h"
 
-#include <sstream>
 
 MongoInterface::MongoInterface(std::string host, int port, std::string dbName) : dbName(dbName) {
 
@@ -18,8 +18,18 @@ MongoInterface::~MongoInterface() {
     mongoc_cleanup();
 }
 
-void MongoInterface::insertRecords(std::string query) {
+// This will be a transaction style commit of many records to many collections in one
+// network hop.  This is the most efficient way to batch insert to mongo.
+// most code straight from:
+//  http://mongoc.org/libmongoc/current/mongoc_transaction_opt_t.html
 
+// recs will be a list of Records which themselves wrap a list of bson_t docs* to be
+// inserted to a given collection.  Each Record corresponds to a different collection.
+int MongoInterface::insertRecords(std::vector<Record*> &recs) {
+    
+    // use mongoc_collection_insert
+
+    
 }
 
 // TODO: would love to break this out, but the cleanup prevents easy refactor

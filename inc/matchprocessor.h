@@ -2,12 +2,13 @@
 #define MATCH_PROCESSOR_H
 
 #include <vector>
+#include "matchbundle.h"
 
 class MatchProcessor {
 
 public:
-    virtual void receiveMatches(std::vector<const char*> *matches) = 0;
-    virtual std::vector<const char*>* getMatches() = 0;
+    virtual void receiveMatches(MatchBundle *matches) = 0;
+    virtual size_t getMatchBufferSize() = 0;
     
 };
 #endif

@@ -1,9 +1,9 @@
 #include "testprocessor.h"
 
-void TestProcessor::receiveMatches(std::vector<const char*> *ms) {
+void TestProcessor::receiveMatches(MatchBundle *ms) {
     this->matches = ms;    
 }
 
-std::vector<const char*>* TestProcessor::getMatches() {
+MatchBundle* TestProcessor::getMatches() {
     return this->matches;
 }
