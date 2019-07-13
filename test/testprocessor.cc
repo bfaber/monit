@@ -4,6 +4,6 @@ void TestProcessor::receiveMatches(MatchBundle *ms) {
     this->matches = ms;    
 }
 
-MatchBundle* TestProcessor::getMatches() {
-    return this->matches;
+size_t TestProcessor::getMatchBufferSize() {
+    return this->matches->size();
 }

@@ -11,7 +11,7 @@ public:
 		
 
     virtual void receiveMatches(MatchBundle *matches) override;
-    virtual MatchBundle* getMatches() override;
+    virtual size_t getMatchBufferSize() override;
 
 private:
     const char* csv;
