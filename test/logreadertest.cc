@@ -1,6 +1,10 @@
 #include "logreader.h"
+#include "matchbundle.h"
 #include "testprocessor.h"
 #include "util.h"
+#include "mongointerface.h"
+#include "mongospooler.h"
+#include "testspooler.h"
 #include "gtest/gtest.h"
 
 #include <unistd.h>
@@ -13,6 +17,8 @@ public:
     std::string regex;
     LogReader *reader;
     TestProcessor *processor;
+    CSVProcessor *csv;
+    TestSpooler *testspool;
     ConfigItem *ci;
 
     // this is run per test below.  No way around this.
@@ -29,7 +35,19 @@ public:
 	printf("set up!\n");
 	file = "/Users/bfaber/Desktop/persephony/50kATC401.dat";
 	regex = "^.*requestId\\\"\:\\\"(RQ[a-z0-9]{40}).*$";
+
+	std::string mongohost = std::string("localhost");
+	int mongoport = 27017;
+	std::string dbName = std::string("test");
+
+	auto *mi = new MongoInterface(mongohost, mongoport, dbName);
+	auto *ms = new MongoSpooler(mi);
+
+	testspool = new TestSpooler();
+	csv = new CSVProcessor(testspool);
+
 	processor = new TestProcessor("requestId");
+
 	ci = new ConfigItem();
 	ci->setName("testLogReader");
 	ci->setRegex(regex.c_str());
@@ -38,6 +56,7 @@ public:
 	ci->setCollectionName("testLogReader");
 	std::vector<ConfigItem*> *configs = new std::vector<ConfigItem*>();
 	configs->push_back(ci);
+
 	reader = new LogReader(configs, processor);
 	reader->readFile();
     };
@@ -60,8 +79,22 @@ TEST_F(LogReaderTest, LogReaderGetsRequestIds) {
     std::string matchStr = "06/30 02:22:07.287 {I} : {\"requestHeaders\" : {\"Host\" : \"127.0.0.1:8265\", \"Accept\" : \"*/*\", \"Content-Length\" : \"502\", \"Content-Type\" : \"application/x-www-form-urlencoded\"}, \"queryParameters\" : {}, \"requestBody\" : {\"accountId\":\"AC26f91427cd2fadb33869b09f8b0428e67f82be6f\",\"requestId\":\"RQ3279b11099d777e5ce4308aea6f1dc8d3bc72725\",\"vcsCallId\":\"CAd33388ab50758932e0f1b0111b9f5589127f44f8\",\"vcsScriptId\":\"58b1200536d63c4aac4df9b4ebaa00c0be030b94\",\"interruptIndex\":0,\"event\":\"final\",\"vclResult\":{\"lastCommand\":0,\"commandName\":\"AddToConference\",\"lastNestedCommand\":null,\"nestedCommandName\":null,\"diagnostics\":\"successful completion\",\"returncode\":0,\"resultData\":{}},\"request_number\":\"402167\",\"location\":\"172.25.104.4:5237\"}}";
     reader->findGroups(matchStr, reader->compileRegex(regex), groups);
     EXPECT_EQ(1, groups.size());
+    EXPECT_EQ(std::string("RQ3279b11099d777e5ce4308aea6f1dc8d3bc72725"), groups[0]);
+    
 
     EXPECT_EQ(50787, processor->getMatchBufferSize());
+    MatchBundle *mb = processor->getMatches();
+    EXPECT_EQ(50787, mb->size());
+
+    csv->receiveMatches(mb);
+
+
+    // this should produce some results in mongo.
+    // probably don't want to test that here.
+    // would be nice to break this out a little more
+    // and verify the records produced. 
+    //    csv->processMatches(); 
+    
 }
 
 TEST_F(LogReaderTest, UtilStringSplitTest)  {

@@ -13,12 +13,12 @@ BSON_INC=/usr/local/include/libbson-1.0
 
 MONIT_LIB_DIR = /Users/bfaber/Desktop/play/cpp/monit/src
 
-LIBS = -lpcre -lgtest -lmonit 
+LIBS = -lpcre -lgtest -lmonit -lmongoc-1.0 -lbson-1.0
 LIB_DIR = -L$(GTEST_LIB_DIR) -L$(MONIT_LIB_DIR)
 
 CFLAGS = -g -Wall -std=c++14 -I$(INC_DIR) -I$(PCRE_INC) -I$(GTEST_INC) -I$(MONGO_INC) -I$(BSON_INC)
 
-_OBJ = configitemtest.o logreadertest.o testprocessor.o
+_OBJ = configitemtest.o logreadertest.o testprocessor.o testspooler.o
 OBJ = $(patsubst %,$(OBJ_DIR)/%,$(_OBJ))
 
 $(OBJ_DIR)/%.o: %.cc $(DEPS)

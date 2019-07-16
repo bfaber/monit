@@ -44,3 +44,23 @@ bson_t* Record::zipUpCsvWithGroups(std::string csv, std::vector<std::string> &gr
     }
     return doc;
 }
+
+const bson_t** Record::getDocs() {
+    /*    
+    for(int i = 0; i < docs.size(); i++) {
+	docsArray[i] = docs[i];
+    }
+	
+    return docsArray;
+    */
+    return const_cast<const bson_t**>(&docs[0]);
+}
+
+std::string Record::getCollectionName() {
+    return collectionName;
+}
+
+size_t Record::size() {
+    return docs.size();
+}
+

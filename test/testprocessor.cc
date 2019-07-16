@@ -7,3 +7,7 @@ void TestProcessor::receiveMatches(MatchBundle *ms) {
 size_t TestProcessor::getMatchBufferSize() {
     return this->matches->size();
 }
+
+MatchBundle* TestProcessor::getMatches() {
+    return matches;
+}

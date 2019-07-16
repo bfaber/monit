@@ -9,13 +9,15 @@
 #include "mongointerface.h"
 /**
  *  Encapsulate Mongo instance data, and interface to mongo
- *  Runs in own thread, takes all enqueued inserts and batch commits them.
+ *   This is held by csvprocessor which isnt doing too much rn, will
+ *    be fine to have that block while this commits.
+ *    Main concern is not blocking reading of log files. 
  */
 class MongoSpooler {
 public:
     MongoSpooler(MongoInterface *mi);
 
-    void enqueue(std::vector<Record*> &recs);
+    virtual void enqueue(std::vector<Record*> &recs);
 
     int commitToMongo();
     

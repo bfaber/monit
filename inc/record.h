@@ -7,10 +7,15 @@
 
 #include "matchbundle.h"
 
+//TODO: eventually subclass this with MongoRecord, etc.
 class Record {
  public:
     Record(std::vector<MatchBundle*> &mbs);
     void addRecords(std::vector<MatchBundle*> &mbs);
+    const bson_t** getDocs();
+    size_t size();
+    std::string getCollectionName();
+    
     
 private:
     std::string collectionName;

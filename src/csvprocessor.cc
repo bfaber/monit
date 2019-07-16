@@ -10,7 +10,6 @@
 // TODO: fix ownership of csv
 CSVProcessor::CSVProcessor(MongoSpooler *mongoSpooler) : spooler(mongoSpooler),		    
 							 shutdown(false)  {
-
 }
 
 CSVProcessor::~CSVProcessor() {
@@ -90,8 +89,11 @@ void CSVProcessor::processMatches() {
     for(auto& kv : recordsByName) {
 	recs.push_back(kv.second);
     }
+
     spooler->enqueue(recs);
 }
+
+
 
 size_t CSVProcessor::getMatchBufferSize() {
     return matchBuffer.size();

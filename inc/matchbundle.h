@@ -9,6 +9,9 @@
  *  Encapsulate the group/csv pairs, as well as any ancillary data 
  *  associated with them.
  *
+ *  This represents a list of regex matches from a logfile section.
+ *   Regex + logfileSection -> vec<groups> (ie MatchBundle)
+ *
  *  TODO: inherit this from configitem, and just cast to matchbundle
  *  on setting of capturedGroups?
  */
