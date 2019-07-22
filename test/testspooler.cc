@@ -7,6 +7,13 @@ TestSpooler::TestSpooler() : MongoSpooler(nullptr) {
 
 void TestSpooler::enqueue(std::vector<Record*> &recs) {
     for (auto *rec : recs) {
-	recordQueue.push_back(rec);
+	recordQueueTest.push_back(rec);
     }
+}
+
+Record* TestSpooler::popRecord() {
+    if(recordQueueTest.size() > 0)
+	return recordQueueTest[0];
+    else
+	return nullptr;
 }

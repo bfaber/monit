@@ -1,57 +1,21 @@
-#include <algorithm>
-#include <string>
-#include <map>
-#include <mongoc/mongoc.h>
 
-#include "csvprocessor.h"
-#include "util.h"
-#include "record.h"
+#include "mongorecordprocessor.h"
 
-
-CSVProcessor::CSVProcessor(MongoSpooler *mongoSpooler) : spooler(mongoSpooler),		    
-							 shutdown(false)  {
+MongoRecordProcessor::MongoRecordProcessor(MongoSpooler *ms) : spooler(ms) {
 }
 
-CSVProcessor::~CSVProcessor() {
-    delete spooler;
-}
-
-CSVProcessor::CSVProcessor(CSVProcessor&& other) : spooler(std::move(other.spooler)),
-						   matchBuffer(other.matchBuffer),
-						   shutdown(other.shutdown) {
-}
-
-CSVProcessor::CSVProcessor(CSVProcessor const &other) : spooler(other.spooler),
-							matchBuffer(other.matchBuffer),
-							shutdown(other.shutdown) {
-}
-
-void CSVProcessor::operator() () {
-    processMatches();
-}
-
-std::thread CSVProcessor::start(CSVProcessor *inst) {
-    std::thread th(*inst);
-    return th;
-}
-
-void CSVProcessor::shutdownThread() {
-    // bail us out of the processMatches thread/while loop
-    mutex.lock();
-    shutdown = true;
-    mutex.unlock();
-}
 
 // TODO: at some point it will be more of a bundle of objects that
 // have been scraped and will be batched up with approps csv.
-void CSVProcessor::receiveMatches(MatchBundle *mb) {
+void MongoRecordProcessor::receiveMatches(MatchBundle *mb) {
     mutex.lock();
-    matchBuffer.push_back(mb);
+    printf("pushing back a match on MongoRecordProcessor!\n");
+    matchBuffer.addMatches(mb);
     mutex.unlock();
 }
 
-void CSVProcessor::processMatches() {
-    printf("Processing Matches from new CSVThread!\n");
+void MongoRecordProcessor::processMatches() {
+
     // take the csv along with the matches, and zip them up as tuples.
     // then send out the vector of tuples to the spooler
 
@@ -74,10 +38,8 @@ void CSVProcessor::processMatches() {
     // first thing to do is sort matchbundles by collection, empty the matchBuffer this way
     std::map<std::string, std::vector<MatchBundle*>> bundlesByName;
     mutex.lock();
-    for(auto *mb : matchBuffer) {
-	bundlesByName[mb->getConfig()->getCollectionName()].push_back(mb);
-    }
-    matchBuffer.clear();
+    matchBuffer.getMatchesByName(bundlesByName);
+    matchBuffer.clearBuffers();
     mutex.unlock();
 
     std::map<std::string, Record*> recordsByName;
@@ -94,7 +56,3 @@ void CSVProcessor::processMatches() {
 }
 
 
-
-size_t CSVProcessor::getMatchBufferSize() {
-    return matchBuffer.size();
-}

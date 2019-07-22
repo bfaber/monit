@@ -8,13 +8,13 @@
 #include <mutex>
 
 #include "pcre.h"
-#include "csvprocessor.h"
+#include "recordprocessor.h"
 #include "configitem.h"
 
 class LogReader {
     friend class LogReaderTest;
 public:
-    LogReader(std::vector<ConfigItem*>* configs, MatchProcessor *p);
+    LogReader(std::vector<ConfigItem*>* configs, RecordProcessor *p);
     LogReader(LogReader&& lr);
     LogReader(LogReader const &lr);
     ~LogReader();
@@ -37,7 +37,7 @@ private:
     // a single file per set of regex
     std::vector<ConfigItem*>* configs;
 
-    MatchProcessor* processor;
+    RecordProcessor* processor;
 
     bool threadStarted;
     bool threadStopped;
@@ -47,6 +47,5 @@ private:
     void beginLoop();
     bool readFile();
 
-    //    std::map<std::string, ConfigItem*> sortConfigsByFilename(std::vector<ConfigItem*> *configs);
 };
 #endif

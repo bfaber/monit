@@ -12,14 +12,14 @@ void Record::addRecords(std::vector<MatchBundle*> &mbs) {
     for(auto *mb : mbs) {
 	
 	if(collectionName.empty()) {
-	    collectionName = mb->getConfig()->getCollectionName();
-	} else if(collectionName != mb->getConfig()->getCollectionName()) {
+	    collectionName = mb->getConfigItem()->getCollectionName();
+	} else if(collectionName != mb->getConfigItem()->getCollectionName()) {
 	    throw std::invalid_argument("collection of MatchBundle doesn't match Record");
 	}
 
 	// build the bson doc
 	// the doc captures the values from the matchbundle
-	ConfigItem *config = mb->getConfig();
+	ConfigItem *config = mb->getConfigItem();
 	for(auto group : mb->getBundle()) {
 	    bson_t *doc = zipUpCsvWithGroups(config->getCsv(), group);
 	    docs.push_back(doc);			     
@@ -41,6 +41,9 @@ bson_t* Record::zipUpCsvWithGroups(std::string csv, std::vector<std::string> &gr
 			     group[i].size());
 
 	}
+    }
+    else {
+	throw std::invalid_argument("csv length and group length do not match");
     }
     return doc;
 }

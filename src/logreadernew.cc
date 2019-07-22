@@ -1,13 +1,10 @@
-#include <thread>
 #include <stdlib.h>
 
-#include "logreader.h"
+#include "logreadernew.h"
 #include "matchbundle.h"
 
-LogReader::LogReader(std::vector<ConfigItem*> *cfgs, RecordProcessor *recprocessor) :
-    threadStarted(false),
-    threadStopped(false),
-    shutdown(false),
+LogReaderNew::LogReaderNew(std::vector<ConfigItem*> *cfgs, RecordProcessorInterface *recprocessor) :
+    processor(recprocessor),
     configs(cfgs) {
     
     // TODO: need to parse errors if exist, and probably wrap the construction of
@@ -17,10 +14,10 @@ LogReader::LogReader(std::vector<ConfigItem*> *cfgs, RecordProcessor *recprocess
 	const pcre* compiled_regex = compileRegex(configitem->getRegex());
 	configitem->setCompiledRegex(compiled_regex);
     }
-    processor = recprocessor;
+
 }
 
-const pcre* LogReader::compileRegex(std::string regex) {
+const pcre* LogReaderNew::compileRegex(std::string regex) {
 	const char* error;
 	int error_offset;
 
@@ -34,53 +31,7 @@ const pcre* LogReader::compileRegex(std::string regex) {
 	return compiled_regex;
 }
 
-// have to specify both move and copy ctors
-LogReader::LogReader(LogReader&& other) : threadStarted(other.threadStarted),
-					  threadStopped(other.threadStopped) {
-
-    printf("move constructor called on LogReader\n");
-    processor     = other.processor;	
-}
-
-LogReader::LogReader(LogReader const &other) {
-    printf("copy constructor called on LogReader\n");
-    threadStarted = other.threadStarted;
-    threadStopped = other.threadStopped;    
-    processor     = other.processor;	
-}
-
-LogReader::~LogReader() {
-    printf("deleting log reader!\n");
-}
-
-std::thread LogReader::start(LogReader *inst) {    
-    std::thread th(*inst);
-    return th;
-}
-
-void LogReader::shutdownThread() {
-    mutex.lock();
-    shutdown = true;
-    mutex.unlock();
-}
-
-void LogReader::operator()() {
-    mutex.lock();
-    threadStarted = true;
-    mutex.unlock();
-    readFile();
-    printf("hello world\n");
-}
-
-bool LogReader::isThreadStarted() {
-    bool started = false;
-    mutex.lock();
-    started = threadStarted;
-    mutex.unlock();
-    return started;
-}
-
-int LogReader::findGroups(std::string text, const pcre* compiledRegex, std::vector<std::string> &groups) {
+int LogReaderNew::findGroups(std::string text, const pcre* compiledRegex, std::vector<std::string> &groups) {
     
     int captures[30]; // docs call this 'ovector'
     int rc = pcre_exec(compiledRegex, NULL, text.c_str(), strlen(text.c_str()), 0, 0, captures, 30);
@@ -113,7 +64,7 @@ int LogReader::findGroups(std::string text, const pcre* compiledRegex, std::vect
  *  can be run when the file is open.  There should not be opening and reading of the file
  *  multiple times.   
  */
-bool LogReader::readFile() {
+bool LogReaderNew::readFiles() {
     printf("reading files!\n");
     for(auto *configitem : *configs) {
 	// TODO: this has to be a matchitem

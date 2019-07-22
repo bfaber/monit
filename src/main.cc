@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <getopt.h>
 #include <vector>
-#include "logreader.h"
-#include "csvprocessor.h"
+#include "logreadernew.h"
+#include "mongorecordprocessor.h"
 
 int main(int argc, char** argv) {
     printf("Parsing options...\n");
@@ -95,18 +95,13 @@ int main(int argc, char** argv) {
     // this setup allows easier refactor to have multiple log readers per log processor
     // actually only have one log reader but have it handle multiple files
     // and multiple regexes. 
-    auto *lp = new CSVProcessor(ms);
-    auto *lr = new LogReader(configs, lp);
+    auto *rp = new MongoRecordProcessor(ms);
+    auto *lr = new LogReaderNew(configs, rp);
 
-    auto lrTh = LogReader::start(lr); // fires off logReader thread for that instance
-    auto lpTh = CSVProcessor::start(lp);
-
-    lrTh.join(); // this should clean up first, then the processor thread
-    lpTh.join();
     
     
-    //    CSVProcessor::start(lp); // fires off processor thread for processing events
-    delete lp;
+
+    delete rp;
     delete lr;
     
     return 0;

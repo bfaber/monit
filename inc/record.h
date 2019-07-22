@@ -15,8 +15,7 @@ class Record {
     const bson_t** getDocs();
     size_t size();
     std::string getCollectionName();
-    
-    
+        
 private:
     std::string collectionName;
     std::vector<bson_t*> docs;

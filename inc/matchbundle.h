@@ -21,7 +21,7 @@ public:
 
     void addGroups(std::vector<std::string> groups);
     size_t size();
-    ConfigItem* getConfig();
+    ConfigItem* getConfigItem();
     std::vector<std::vector<std::string>> getBundle();
     
 private:

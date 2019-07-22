@@ -17,10 +17,10 @@ LIB_DIR = -L$(GTEST_LIB_DIR)
 CFLAGS = -g -Wall -std=c++11 -I$(INC_DIR) -I$(PCRE_INC) -I$(GTEST_INC) -I$(MONGO_INC) \
 -I$(BSON_INC)
 
-_DEPS = logreader.h csvprocessor.h util.h mongointerface.h mongospooler.h configitem.h matchprocessor.h matchbundle.h record.h
+_DEPS = logreadernew.h mongorecordprocessor.h util.h mongointerface.h mongospooler.h configitem.h matchprocessor.h matchbundle.h record.h
 DEPS = $(patsubst %,$(INC_DIR)/%,$(_DEPS))
 
-_OBJ = csvprocessor.o logreader.o util.o main.o mongointerface.o mongospooler.o configitem.o matchbundle.o record.o
+_OBJ = mongorecordprocessor.o logreadernew.o util.o main.o mongointerface.o mongospooler.o configitem.o matchbundle.o record.o matchbuffer.o
 OBJ = $(patsubst %,$(OBJ_DIR)/%,$(_OBJ))
 
 
@@ -31,8 +31,8 @@ monit: $(OBJ)
 	$(CC) -o $@ $^ $(CFLAGS) $(LIBS) $(LIB_DIR)
 
 # for testing
-libmonit.a: obj/csvprocessor.o obj/logreader.o obj/util.o obj/mongospooler.o obj/mongointerface.o obj/configitem.o obj/matchbundle.o obj/record.o
-	ar rcs libmonit.a obj/csvprocessor.o obj/logreader.o obj/util.o obj/mongospooler.o obj/mongointerface.o obj/configitem.o obj/matchbundle.o obj/record.o
+libmonit.a: obj/mongorecordprocessor.o obj/logreadernew.o obj/util.o obj/mongospooler.o obj/mongointerface.o obj/configitem.o obj/matchbundle.o obj/record.o obj/matchbuffer.o
+	ar rcs libmonit.a obj/mongorecordprocessor.o obj/logreadernew.o obj/util.o obj/mongospooler.o obj/mongointerface.o obj/configitem.o obj/matchbundle.o obj/record.o obj/matchbuffer.o
 
 test: libmonit.a
 

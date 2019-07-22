@@ -1,13 +1,15 @@
 #include "testprocessor.h"
 
+TestProcessor::TestProcessor(MongoSpooler *ts) : spooler(ts) {}
+
 void TestProcessor::receiveMatches(MatchBundle *ms) {
-    this->matches = ms;    
+    printf("pushing back match bundle on test processor!\n");
+    testmatches.push_back(ms);
 }
 
-size_t TestProcessor::getMatchBufferSize() {
-    return this->matches->size();
-}
-
-MatchBundle* TestProcessor::getMatches() {
-    return matches;
+void TestProcessor::getMatches(std::vector<MatchBundle*> &ms) {
+    for(auto *mb : testmatches) {
+	printf("returning a match from test processor!\n");
+	ms.push_back(mb);
+    }
 }

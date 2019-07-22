@@ -16,7 +16,7 @@
 class MongoSpooler {
 public:
     MongoSpooler(MongoInterface *mi);
-
+    
     virtual void enqueue(std::vector<Record*> &recs);
 
     int commitToMongo();

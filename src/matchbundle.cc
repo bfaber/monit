@@ -11,7 +11,7 @@ size_t MatchBundle::size() {
     return groupBundle.size();
 }
 
-ConfigItem* MatchBundle::getConfig() {
+ConfigItem* MatchBundle::getConfigItem() {
     return config;
 }
 

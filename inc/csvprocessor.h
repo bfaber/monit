@@ -24,12 +24,13 @@ class CSVProcessor : public MatchProcessor {
     
     void receiveMatches(MatchBundle *matches) override;
     size_t getMatchBufferSize() override;
-    
+
 private:
     std::thread thread;
     std::mutex mutex;
     bool shutdown;
-    void processMatches();
+
+    void processMatches();    
     std::vector<MatchBundle*> matchBuffer;
     MongoSpooler *spooler;
 

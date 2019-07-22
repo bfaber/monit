@@ -7,8 +7,8 @@
 class MatchProcessor {
 
 public:
-    virtual void receiveMatches(MatchBundle *matches) = 0;
-    virtual size_t getMatchBufferSize() = 0;
+    void receiveMatches(MatchBundle *matches);
+    size_t getMatchBufferSize();
     
 };
 #endif
