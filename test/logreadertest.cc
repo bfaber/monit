@@ -93,7 +93,7 @@ TEST_F(LogReaderNewTest, CheckProcessorProcessesMatches) {
     //    EXPECT_TRUE(std::filesystem::exists(file));
     std::vector<ConfigItem*> *configs = new std::vector<ConfigItem*>();
     configs->push_back(ci);
-	    
+    //    auto *testmongo = new TestMongoInterface();
     auto *testspool = new TestSpooler();
     auto *processor = new MongoRecordProcessor(testspool);
     auto *reader = new LogReaderNew(configs, processor);
@@ -106,15 +106,23 @@ TEST_F(LogReaderNewTest, CheckProcessorProcessesMatches) {
     //    EXPECT_EQ(1, processor->getMatchBufferSize());
     
     processor->processMatches();
-    EXPECT_EQ(1, testspool->recordQueueTest.size());
+    ASSERT_EQ(1, testspool->recordQueueTest.size());
 
     // this should produce some results in mongo.
     // probably don't want to test that here.
     // would be nice to break this out a little more
     // and verify the records produced. 
     //    csv->processMatches();
-    // using testspooler to get to records right before mongo.       
+    // using testspooler to get to records right before mongo.
+    Record* rec = testspool->popRecord();
+    ASSERT_NE(nullptr, rec);
+    const bson_t *doc = rec->getDocs()[0];
+    const char* json = bson_as_json(doc, nullptr);
+
+    printf("testspooler record 0: %s\n", json);
+    EXPECT_STREQ("{ \"requestId\" : \"RQ3279b11099d777e5ce4308aea6f1dc8d3bc72725\" }", json);
 }
+
 
 TEST_F(LogReaderNewTest, UtilStringSplitTest)  {
     std::string csv = "requestId,accountId";

@@ -36,6 +36,7 @@ void MongoRecordProcessor::processMatches() {
     // spec in configitems
 
     // first thing to do is sort matchbundles by collection, empty the matchBuffer this way
+    printf("processmatches\n");
     std::map<std::string, std::vector<MatchBundle*>> bundlesByName;
     mutex.lock();
     matchBuffer.getMatchesByName(bundlesByName);
@@ -51,7 +52,7 @@ void MongoRecordProcessor::processMatches() {
     for(auto& kv : recordsByName) {
 	recs.push_back(kv.second);
     }
-
+    
     spooler->enqueue(recs);
 }
 

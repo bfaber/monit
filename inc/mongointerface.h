@@ -12,7 +12,7 @@ public:
     MongoInterface(std::string host, int port, std::string dbName);
     ~MongoInterface();
     std::vector<ConfigItem*>* getConfigs(std::string collectionName);
-    int insertRecords(std::vector<Record*> &recs);
+    virtual int insertRecords(std::vector<Record*> &recs);
     
 private:
     ConfigItem* parseConfigFromBson(const bson_t *doc);

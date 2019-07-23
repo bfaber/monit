@@ -9,7 +9,7 @@ LogReaderNew::LogReaderNew(std::vector<ConfigItem*> *cfgs, RecordProcessorInterf
     
     // TODO: need to parse errors if exist, and probably wrap the construction of
     // this reader so that compilation failure can be cleanly handled.
-    for(auto *configitem : *configs) {
+    for(auto *configitem : *cfgs) {
 	printf("Compiling regex: %s\n", configitem->getRegex().c_str());
 	const pcre* compiled_regex = compileRegex(configitem->getRegex());
 	configitem->setCompiledRegex(compiled_regex);

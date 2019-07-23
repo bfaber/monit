@@ -16,21 +16,21 @@ int main(int argc, char** argv) {
     std::string regex;
     std::string csv;
     // parse options
-    // works with both -h 192.0.0.1 and -h=192.0.0.1 
+    // works with both -h 127.0.0.1 and -h=127.0.0.1 
     while(1) {
 	static struct option long_options[] = {
 	       {"mongo_host", required_argument, 0, 'h'},
 	       {"mongo_port", required_argument, 0, 'p'},
-	       {"coll_name", required_argument, 0, 't'},
 	       {"db_name", required_argument, 0, 'd'},
-	       {"logfile", required_argument, 0, 'l'},
-	       {"regex", required_argument, 0, 'r'},
-	       {"csv", required_argument, 0, 'c'},
+	       {"coll_name", required_argument, 0, 'c'},
+	       {"logfile", optional_argument, 0, 'l'},
+	       {"regex", optional_argument, 0, 'r'},
+	       {"csv", optional_argument, 0, 's'},
 	       {0,0,0,0}
 	};
 
 	int opt_index = 0;
-	option = getopt_long(argc, argv, "h:p:l:r:c:", long_options, &opt_index);
+	option = getopt_long(argc, argv, "s:d:h:p:l:r:c:", long_options, &opt_index);
 
 	if(option == -1)
 	    break;
@@ -40,7 +40,7 @@ int main(int argc, char** argv) {
 	      printf("got host: %s\n", optarg);
 	      mongohost = std::string(optarg);
 	      break;
-	  case 't':
+	  case 'c':
 	      printf("got collection name: %s\n", optarg);
 	      configCollectionName = std::string(optarg);
 	      break;
@@ -60,7 +60,7 @@ int main(int argc, char** argv) {
 	    printf("regex: %s\n", optarg);
 	    regex = std::string(optarg);
 	    break;
-	  case 'c':
+	  case 's':
 	    printf("csv: %s\n", optarg);
 	    csv = std::string(optarg);
 	    break;
@@ -97,12 +97,8 @@ int main(int argc, char** argv) {
     // and multiple regexes. 
     auto *rp = new MongoRecordProcessor(ms);
     auto *lr = new LogReaderNew(configs, rp);
-
-    
-    
-
-    delete rp;
-    delete lr;
-    
+    lr->readFiles();
+    rp->processMatches();
+    ms->commitToMongo();
     return 0;
 }

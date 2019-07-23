@@ -3,7 +3,7 @@
 #include "mongointerface.h"
 
 //TODO: make this a singleton
-MongoInterface::MongoInterface(std::string host, int port, std::string dbName) : dbName(dbName) {
+MongoInterface::MongoInterface(std::string host, int port, std::string db) : dbName(db) {
 
     
     // if there are issues with this, might have to rebuild the driver:
@@ -71,7 +71,7 @@ int MongoInterface::insertRecords(std::vector<Record*> &records) {
     }
 
     mongoc_client_set_error_api (client, 2);
-    database = mongoc_client_get_database (client, "example-transaction");
+    database = mongoc_client_get_database (client, dbName.c_str());
 
 
     /* a transaction's read preferences, read concern, and write concern can be
@@ -236,7 +236,7 @@ std::vector<ConfigItem*>* MongoInterface::getConfigs(std::string configCollName)
     mongoc_client_set_error_api (client, 2);
 
     mongoc_collection_t *collection = mongoc_client_get_collection (client, dbName.c_str(), configCollName.c_str());
-
+    printf("pulling config from db %s\n", dbName.c_str());
     bson_t query;    
     bson_init (&query);
     mongoc_cursor_t *cursor = mongoc_collection_find_with_opts(collection,
@@ -248,6 +248,7 @@ std::vector<ConfigItem*>* MongoInterface::getConfigs(std::string configCollName)
     const bson_t *doc;
     char *str = nullptr;
     while (mongoc_cursor_next (cursor, &doc)) {
+
 	//str = bson_as_canonical_extended_json (doc, NULL);
 	// unpack the bson without intermediate json... unnecessary
 	auto *configItem = parseConfigFromBson(doc);
