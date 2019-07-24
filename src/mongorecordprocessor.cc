@@ -7,10 +7,12 @@ MongoRecordProcessor::MongoRecordProcessor(MongoSpooler *ms) : spooler(ms) {
 
 // TODO: at some point it will be more of a bundle of objects that
 // have been scraped and will be batched up with approps csv.
-void MongoRecordProcessor::receiveMatches(MatchBundle *mb) {
+void MongoRecordProcessor::receiveMatches(std::vector<MatchBundle*> &bundles) {
     mutex.lock();
-    printf("pushing back a match on MongoRecordProcessor!\n");
-    matchBuffer.addMatches(mb);
+    for(auto *mb : bundles) {
+	printf("pushing back a match on MongoRecordProcessor!\n");
+	matchBuffer.addMatches(mb);
+    }
     mutex.unlock();
 }
 

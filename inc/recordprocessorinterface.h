@@ -10,6 +10,6 @@
  */
 class RecordProcessorInterface {
  public:
-    virtual void receiveMatches(MatchBundle *matches) = 0;
+    virtual void receiveMatches(std::vector<MatchBundle*> &matches) = 0;
 };
 #endif

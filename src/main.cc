@@ -97,6 +97,8 @@ int main(int argc, char** argv) {
     // and multiple regexes. 
     auto *rp = new MongoRecordProcessor(ms);
     auto *lr = new LogReaderNew(configs, rp);
+
+    
     lr->readFiles();
     rp->processMatches();
     ms->commitToMongo();

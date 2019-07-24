@@ -4,8 +4,7 @@
 #include "matchbundle.h"
 
 LogReaderNew::LogReaderNew(std::vector<ConfigItem*> *cfgs, RecordProcessorInterface *recprocessor) :
-    processor(recprocessor),
-    configs(cfgs) {
+    processor(recprocessor) {
     
     // TODO: need to parse errors if exist, and probably wrap the construction of
     // this reader so that compilation failure can be cleanly handled.
@@ -15,6 +14,11 @@ LogReaderNew::LogReaderNew(std::vector<ConfigItem*> *cfgs, RecordProcessorInterf
 	configitem->setCompiledRegex(compiled_regex);
     }
 
+    // set up configs per log file to make parsing more efficient
+    for(auto *config : *cfgs) {
+	auto *mb = new MatchBundle(config);
+	matchBundlesPerFilename[config->getFileName()].push_back(mb);
+    }    
 }
 
 const pcre* LogReaderNew::compileRegex(std::string regex) {
@@ -60,53 +64,52 @@ int LogReaderNew::findGroups(std::string text, const pcre* compiledRegex, std::v
 /**
  * Read the file line by line, parse each line with regex, capturing whatever groups exist.
  * Group count given by pcre_exec return value (rc).  
- * readFile will use the interface provided by the RecordProcessor for dealing with events.  The events vector will be allocated here and then moved to the RecordProcessor via uniquepointer.*  TODO:  configItems should be bundled by filename so that all regexes assoc with a file
+ * readFile will use the interface provided by the RecordProcessorInterface for dealing with matches.  The matches vector will be allocated here and then moved to the RecordProcessor via uniquepointer.*  TODO:  configItems should be bundled by filename so that all regexes assoc with a file
  *  can be run when the file is open.  There should not be opening and reading of the file
  *  multiple times.   
  */
 bool LogReaderNew::readFiles() {
     printf("reading files!\n");
-    for(auto *configitem : *configs) {
-	// TODO: this has to be a matchitem
-	// TODO: fix this, use move somehow
-	std::string line;
-	int linect = 0;
-	auto *matches = new MatchBundle(configitem); 
+    // map<filename, vec<matchbundle>>
+    for(auto &kv : matchBundlesPerFilename) {
 	std::ifstream logfile;
-	const char* logfilename = configitem->getFileName().c_str();
-	const pcre* compiledRegex = configitem->getCompiledRegex();
+	const char* logfilename = kv.first.c_str();
 	printf("logfilename: %s\n", logfilename);
 
 	logfile.open(logfilename, std::ios_base::in);
-    
 	if( logfile.is_open() ) {
 	    printf("logfile open\n");
+	    std::string line;
+	    int linect = 0;
 	    while( getline(logfile, line) ) {
 		linect++;
-		std::vector<std::string> groups;
-		/*
-		 * captures is a strange usage by pcre, must be size multiple of 3, 
-		 * and only first 2 thirds will pass back captured substrings, 
-		 * the rest is a 'workspace' by pcre_exec. See docs on 'ovector':
-		 * https://pcre.org/original/doc/html/pcreapi.html
-		 * captures contains set of pairs marking the beginning and end of 
-		 * matching subgroups.
-		 */
-		int rc = findGroups(line, compiledRegex, groups);
-		if( ! groups.empty() ) {
-		    //printf("csv: %s\n", csv.c_str());
-		    matches->addGroups(groups);
-		} else {		    
-		    printf("some other negative value for rc %d\n", rc);
+    
+		// kv.second is vec<matchbundle>
+		for(auto *mb : kv.second) {
+		    /*
+		     * captures is a strange usage by pcre, must be size multiple of 3, 
+		     * and only first 2 thirds will pass back captured substrings, 
+		     * the rest is a 'workspace' by pcre_exec. See docs on 'ovector':
+		     * https://pcre.org/original/doc/html/pcreapi.html
+		     * captures contains set of pairs marking the beginning and end of 
+		     * matching subgroups.
+		     */
+		    std::vector<std::string> groups;
+		    const pcre* compiledRegex = mb->getConfigItem()->getCompiledRegex();
+		    int rc = findGroups(line, compiledRegex, groups);
+		    if( ! groups.empty() ) {
+			//printf("csv: %s\n", csv.c_str());
+			mb->addGroups(groups);
+		    } else {		    
+			printf("some other negative value for rc %d\n", rc);
+		    }
 		}
-	    }	
+	    }
+	    // these should be all for the same collection?
+	    // no, for the same file, not necessarily the same collection
+	    // its processor responsibility to sort by collection to build records
+	    processor->receiveMatches(kv.second);
 	}
-	printf("lines searched: %d\n", linect);
-	printf("matches collected: %d\n", matches->size());
-	// these should be all for the same collection?
-	// no, for the same file, not necessarily the same collection
-	// its processor responsibility to sort by collection to build records
-	processor->receiveMatches(matches);
-    }
-    return true;
+    }        
+    return true;   
 }

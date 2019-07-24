@@ -20,7 +20,7 @@ class MongoRecordProcessor : public RecordProcessorInterface {
  public:
     MongoRecordProcessor(MongoSpooler *ms);
         
-    virtual void receiveMatches(MatchBundle *matches) override;
+    virtual void receiveMatches(std::vector<MatchBundle*> &matches) override;
     void processMatches();
 
  private:
