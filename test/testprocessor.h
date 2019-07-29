@@ -12,7 +12,7 @@ class TestProcessor : public RecordProcessorInterface {
 public:
     TestProcessor(MongoSpooler *ms);
 		
-    virtual void receiveMatches(MatchBundle *matches) override;
+    virtual void receiveMatches(std::vector<MatchBundle*> &matches) override;
     void processMatches();
 
     void getMatches(std::vector<MatchBundle*> &ms);

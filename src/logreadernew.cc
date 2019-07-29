@@ -2,6 +2,7 @@
 
 #include "logreadernew.h"
 #include "matchbundle.h"
+#include "util.h"
 
 LogReaderNew::LogReaderNew(std::vector<ConfigItem*> *cfgs, RecordProcessorInterface *recprocessor) :
     processor(recprocessor) {
@@ -75,12 +76,13 @@ bool LogReaderNew::readFiles() {
 	std::ifstream logfile;
 	const char* logfilename = kv.first.c_str();
 	printf("logfilename: %s\n", logfilename);
-
+	long t0 = Util::timeMs();
 	logfile.open(logfilename, std::ios_base::in);
 	if( logfile.is_open() ) {
 	    printf("logfile open\n");
 	    std::string line;
 	    int linect = 0;
+
 	    while( getline(logfile, line) ) {
 		linect++;
     
@@ -105,6 +107,8 @@ bool LogReaderNew::readFiles() {
 		    }
 		}
 	    }
+	    long t1 = Util::timeMs();
+	    printf("logfileRead DT: %ldms\n", (t1 - t0));
 	    // these should be all for the same collection?
 	    // no, for the same file, not necessarily the same collection
 	    // its processor responsibility to sort by collection to build records

@@ -2,9 +2,11 @@
 
 TestProcessor::TestProcessor(MongoSpooler *ts) : spooler(ts) {}
 
-void TestProcessor::receiveMatches(MatchBundle *ms) {
+void TestProcessor::receiveMatches(std::vector<MatchBundle*> &matches) {
     printf("pushing back match bundle on test processor!\n");
-    testmatches.push_back(ms);
+    for(auto *ms : matches) {
+	testmatches.push_back(ms);
+    }
 }
 
 void TestProcessor::getMatches(std::vector<MatchBundle*> &ms) {
