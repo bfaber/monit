@@ -19,6 +19,12 @@ void ConfigItem::setRegex(const char* r) {
 void ConfigItem::setCompiledRegex(const pcre* compiledRegex) {
     pcreCompiledRegex = compiledRegex;
 }
+void ConfigItem::setJitStack(pcre_jit_stack* jit) {
+    jitStack = jit;
+}
+void ConfigItem::setJitExtra(pcre_extra* e) {
+    extra = e;
+}
 void ConfigItem::setCollectionName(const char* collName) {
     collectionName = std::string(collName);
 }
@@ -37,6 +43,12 @@ std::string ConfigItem::getRegex() {
 }
 const pcre* ConfigItem::getCompiledRegex() {
     return pcreCompiledRegex;
+}
+pcre_jit_stack* ConfigItem::getJitStack() {
+    return jitStack;
+}
+pcre_extra* ConfigItem::getJitExtra() {
+    return extra;
 }
 std::string ConfigItem::getCollectionName() {
     return collectionName;

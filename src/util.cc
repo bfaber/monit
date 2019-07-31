@@ -25,3 +25,14 @@ long Util::timeMs() {
     gettimeofday(&tv, NULL);
     return tv.tv_sec * 1000 + tv.tv_usec / 1000;
 }
+
+// The tradeoff here is allocating a chunk of memory for strings at once,
+// rather than every time we dip into 'getline'
+void Util::getLinesFromBuffer(char* buffer, std::vector<std::string> &lines) {
+    
+    std::stringstream stream(buffer);
+    std::string line;
+    while(std::getline(stream, line, '\n')) {
+	lines.push_back(line);
+    }
+}

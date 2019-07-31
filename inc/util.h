@@ -9,5 +9,6 @@ class Util {
  public:
     static std::vector<std::string> splitString(std::string s, char c);
     static long timeMs();
+    static void getLinesFromBuffer(char* buffer, std::vector<std::string> &lines);
 };
 #endif

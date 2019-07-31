@@ -17,11 +17,12 @@ public:
     LogReaderNew(std::vector<ConfigItem*>* configs, RecordProcessorInterface *p);
 
     bool readFiles();
-
     
 private:
+    int  findGroups(const char* text, const pcre *comiledRegex, pcre_jit_stack* jit, pcre_extra *extra, std::vector<std::string> &groups);
     const pcre* compileRegex(std::string regex);
-    int  findGroups(std::string text, const pcre *comiledRegex, std::vector<std::string> &groups);
+
+
     // will batch up the configItem data per filename so that we're only opening
     // a single file per set of regex
 

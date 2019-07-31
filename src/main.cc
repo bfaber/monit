@@ -4,6 +4,7 @@
 #include <vector>
 #include "logreadernew.h"
 #include "mongorecordprocessor.h"
+#include "pcre.h"
 
 int main(int argc, char** argv) {
     printf("Parsing options...\n");
@@ -85,7 +86,15 @@ int main(int argc, char** argv) {
     // // block until complete
     // producer.join();
     // consumer.join();
-
+    int result = 0;
+    pcre_config(PCRE_CONFIG_JIT, &result);
+    if(result == 1) {
+	printf("we have jit!\n");
+    } else {
+	printf(" we dont have jit!\n");
+    }
+    
+    
     // pull config from the db.
     auto *mi = new MongoInterface(mongohost, mongoport, dbName);
     auto *ms = new MongoSpooler(mi);

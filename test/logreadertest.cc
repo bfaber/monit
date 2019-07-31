@@ -60,16 +60,6 @@ public:
     };    
 };
 
-
-TEST_F(LogReaderNewTest, ParsingTest) {
-    std::vector<std::string> groups;
-    // matchstr is a single line from the log file referenced in setup
-    std::string matchStr = "06/30 02:22:07.287 {I} : {\"requestHeaders\" : {\"Host\" : \"127.0.0.1:8265\", \"Accept\" : \"*/*\", \"Content-Length\" : \"502\", \"Content-Type\" : \"application/x-www-form-urlencoded\"}, \"queryParameters\" : {}, \"requestBody\" : {\"accountId\":\"AC26f91427cd2fadb33869b09f8b0428e67f82be6f\",\"requestId\":\"RQ3279b11099d777e5ce4308aea6f1dc8d3bc72725\",\"vcsCallId\":\"CAd33388ab50758932e0f1b0111b9f5589127f44f8\",\"vcsScriptId\":\"58b1200536d63c4aac4df9b4ebaa00c0be030b94\",\"interruptIndex\":0,\"event\":\"final\",\"vclResult\":{\"lastCommand\":0,\"commandName\":\"AddToConference\",\"lastNestedCommand\":null,\"nestedCommandName\":null,\"diagnostics\":\"successful completion\",\"returncode\":0,\"resultData\":{}},\"request_number\":\"402167\",\"location\":\"172.25.104.4:5237\"}}";
-    //    reader->findGroups(matchStr, reader->compileRegex(regex), groups);
-    //    EXPECT_EQ(1, groups.size());
-    //    EXPECT_EQ(std::string("RQ3279b11099d777e5ce4308aea6f1dc8d3bc72725"), groups[0]);
-}
-
 TEST_F(LogReaderNewTest, CheckProcessorReceivesMatches) {
     auto *testspool = new TestSpooler();
     auto *testproc = new TestProcessor(testspool);
