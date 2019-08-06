@@ -7,6 +7,7 @@
 #include "testspooler.h"
 #include "testprocessor.h"
 #include "mongorecordprocessor.h"
+#include "textparser.h"
 #include "gtest/gtest.h"
 
 #include <unistd.h>
@@ -60,6 +61,23 @@ public:
     };    
 };
 
+TEST_F(LogReaderNewTest, CheckRegexParsing) {
+    // see filereadertest for this same line
+    char* line0 = "06/30 02:22:07.287 {I} : {\"requestHeaders\" : {\"Host\" : \"127.0.0.1:8265\", \"Accept\" : \"*/*\", \"Content-Length\" : \"502\", \"Content-Type\" : \"application/x-www-form-urlencoded\"}, \"queryParameters\" : {}, \"requestBody\" : {\"accountId\":\"AC26f91427cd2fadb33869b09f8b0428e67f82be6f\",\"requestId\":\"RQ3279b11099d777e5ce4308aea6f1dc8d3bc72725\",\"vcsCallId\":\"CAd33388ab50758932e0f1b0111b9f5589127f44f8\",\"vcsScriptId\":\"58b1200536d63c4aac4df9b4ebaa00c0be030b94\",\"interruptIndex\":0,\"event\":\"final\",\"vclResult\":{\"lastCommand\":0,\"commandName\":\"AddToConference\",\"lastNestedCommand\":null,\"nestedCommandName\":null,\"diagnostics\":\"successful completion\",\"returncode\":0,\"resultData\":{}},\"request_number\":\"402167\",\"location\":\"172.25.104.4:5237\"}}\n";
+
+    const char* error;
+    const pcre* compiledRegex = TextParser::compileRegex(regex);
+    pcre_jit_stack *jit_stack = pcre_jit_stack_alloc(32*1024, 512*1024);	
+    pcre_extra *extra = pcre_study(compiledRegex, PCRE_STUDY_JIT_COMPILE, &error);
+    pcre_assign_jit_stack(extra, nullptr, jit_stack);
+
+    std::vector<std::string> groups;
+    TextParser::findGroups(line0, compiledRegex, jit_stack, extra, groups);
+
+    EXPECT_EQ(1, groups.size());
+
+}
+
 TEST_F(LogReaderNewTest, CheckProcessorReceivesMatches) {
     auto *testspool = new TestSpooler();
     auto *testproc = new TestProcessor(testspool);
@@ -75,7 +93,7 @@ TEST_F(LogReaderNewTest, CheckProcessorReceivesMatches) {
     ASSERT_EQ(1, bundles.size());
 
     std::vector<std::vector<std::string>> captures = bundles[0]->getBundle();
-    EXPECT_EQ(50787, captures.size());
+    ASSERT_EQ(50787, captures.size());
 }
 
 TEST_F(LogReaderNewTest, CheckProcessorProcessesMatches) {
@@ -106,13 +124,13 @@ TEST_F(LogReaderNewTest, CheckProcessorProcessesMatches) {
     // using testspooler to get to records right before mongo.
     Record* rec = testspool->popRecord();
     ASSERT_NE(nullptr, rec);
+    ASSERT_NE(rec->getDocs(), nullptr);
     const bson_t *doc = rec->getDocs()[0];
     const char* json = bson_as_json(doc, nullptr);
 
     printf("testspooler record 0: %s\n", json);
     EXPECT_STREQ("{ \"requestId\" : \"RQ3279b11099d777e5ce4308aea6f1dc8d3bc72725\" }", json);
 }
-
 
 TEST_F(LogReaderNewTest, UtilStringSplitTest)  {
     std::string csv = "requestId,accountId";

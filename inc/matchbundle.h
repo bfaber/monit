@@ -12,8 +12,6 @@
  *  This represents a list of regex matches from a logfile section.
  *   Regex + logfileSection -> vec<groups> (ie MatchBundle)
  *
- *  TODO: inherit this from configitem, and just cast to matchbundle
- *  on setting of capturedGroups?
  */
 class MatchBundle {
 public:
