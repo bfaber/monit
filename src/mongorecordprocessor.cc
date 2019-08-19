@@ -1,22 +1,24 @@
 
 #include "mongorecordprocessor.h"
 
-MongoRecordProcessor::MongoRecordProcessor(MongoSpooler *ms) : spooler(ms) {
-}
+MongoRecordProcessor::MongoRecordProcessor(MongoSpooler *ms) : spooler(ms) {}
 
+size_t MongoRecordProcessor::getMatchBufferSize() {
+    return matchBuffer.size();
+}
 
 // TODO: at some point it will be more of a bundle of objects that
 // have been scraped and will be batched up with approps csv.
 void MongoRecordProcessor::receiveMatches(std::vector<MatchBundle*> &bundles) {
+    printf("pushing back bundles on MongoRecordProcessor! %lu\n", bundles.size());
     mutex.lock();
     for(auto *mb : bundles) {
-	printf("pushing back a match on MongoRecordProcessor!\n");
 	matchBuffer.addMatches(mb);
     }
     mutex.unlock();
 }
 
-void MongoRecordProcessor::processMatches() {
+bool MongoRecordProcessor::processMatches() {
 
     // take the csv along with the matches, and zip them up as tuples.
     // then send out the vector of tuples to the spooler
@@ -38,7 +40,7 @@ void MongoRecordProcessor::processMatches() {
     // spec in configitems
 
     // first thing to do is sort matchbundles by collection, empty the matchBuffer this way
-    printf("processmatches\n");
+    printf("processmatches matchbuffer size: %lu\n", matchBuffer.size());
     std::map<std::string, std::vector<MatchBundle*>> bundlesByName;
     mutex.lock();
     matchBuffer.getMatchesByName(bundlesByName);
@@ -52,10 +54,22 @@ void MongoRecordProcessor::processMatches() {
 
     std::vector<Record*> recs;
     for(auto& kv : recordsByName) {
-	recs.push_back(kv.second);
+	// here we check if rec is valid...
+	// this is really a perf consideration since we're iterating here anyway.
+	// because bundles get shuffled when enqueued, we just ensure that
+	// no empty Record objects make it to the spooler here.
+	// This instead of iterating through them before enqueuing them here.
+	if(kv.second->size() > 0) {
+	    recs.push_back(kv.second);
+	}
     }
-    
-    spooler->enqueue(recs);
+    // let executor sleep a bit if nothing is here.
+    if(recs.size() > 0) {
+	spooler->enqueue(recs);
+	return true;
+    } else {
+	return false;
+    }
 }
 
 

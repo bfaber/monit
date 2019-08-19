@@ -4,6 +4,8 @@
 #include <vector>
 #include "logreadernew.h"
 #include "mongorecordprocessor.h"
+#include "logreaderexecutor.h"
+#include "processorexecutor.h"
 #include "pcre.h"
 
 int main(int argc, char** argv) {
@@ -98,8 +100,13 @@ int main(int argc, char** argv) {
     // pull config from the db.
     auto *mi = new MongoInterface(mongohost, mongoport, dbName);
     auto *ms = new MongoSpooler(mi);
-
-    std::vector<ConfigItem*> *configs = mi->getConfigs(configCollectionName);
+    std::vector<ConfigItem*> *configs;
+    try {
+	configs = mi->getConfigs(configCollectionName);
+    } catch(const std::runtime_error &re) {
+	printf("%s\n", re.what());
+	return(1);
+    }
 
     // this setup allows easier refactor to have multiple log readers per log processor
     // actually only have one log reader but have it handle multiple files
@@ -107,9 +114,13 @@ int main(int argc, char** argv) {
     auto *rp = new MongoRecordProcessor(ms);
     auto *lr = new LogReaderNew(configs, rp);
 
-    
-    lr->readFiles();
-    rp->processMatches();
-    ms->commitToMongo();
+    //auto *rpTh = new ProcessorExecutor(rp, ms);
+    //    auto *lrTh = new LogReaderExecutor(lr);
+    // two threads, one to read the files and one to processmatches and send to mongo.
+    // the mongo match consumer thread starts first.
+    // thread executors manage starting and stopping of threads here. 
+        lr->readFiles(); //logreaderexecutor thread running, probably after the mongo/matchprocessor thread is running
+        rp->processMatches();
+        ms->commitToMongo();
     return 0;
 }

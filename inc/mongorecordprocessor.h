@@ -21,12 +21,12 @@ class MongoRecordProcessor : public RecordProcessorInterface {
     MongoRecordProcessor(MongoSpooler *ms);
         
     virtual void receiveMatches(std::vector<MatchBundle*> &matches) override;
-    void processMatches();
-
+    bool processMatches();
+    size_t getMatchBufferSize();
+    
  private:
     std::mutex mutex;
     MatchBuffer matchBuffer;
     MongoSpooler *spooler;
-
 };
 #endif

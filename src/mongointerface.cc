@@ -32,7 +32,6 @@ int MongoInterface::insertRecords(std::vector<Record*> &records) {
 
     mongoc_client_t *client = NULL;
     mongoc_database_t *database = NULL;
-    mongoc_collection_t *collection = NULL;
     mongoc_client_session_t *session = NULL;
     mongoc_session_opt_t *session_opts = NULL;
     mongoc_transaction_opt_t *default_txn_opts = NULL;
@@ -42,9 +41,9 @@ int MongoInterface::insertRecords(std::vector<Record*> &records) {
     const char *uri_string = "mongodb://127.0.0.1/?appname=transaction-example";
     mongoc_uri_t *uri;
     bson_error_t error;
-    bson_t *doc = NULL;
+    
     bson_t *insert_opts = NULL;
-    int32_t i;
+    //int32_t i;
     int64_t start;
     bson_t reply = BSON_INITIALIZER;
     char *reply_json;
@@ -104,20 +103,11 @@ int MongoInterface::insertRecords(std::vector<Record*> &records) {
 	goto done;
     }
 
- retry_transaction:
-    r = mongoc_client_session_start_transaction (session, txn_opts, &error);
-    if (!r) {
-	MONGOC_ERROR ("Failed to start transaction: %s", error.message);
-	goto done;
-    }
-
-    // for each Record(ie collection), insert the many documents per.
-    for (auto *record : records) {
-
-	bson_destroy (&reply);
+    for(auto *record : records) {
 	/* inserting into a nonexistent collection normally creates it, but a
-	 * collection can't be created in a transaction; create it now */
+	 * collection can't be created in a transaction; create it now */	
 	const char* collName = record->getCollectionName().c_str();
+	printf("Creating/retrieving %s collection\n", collName);
 	mongoc_collection_t *collection =
 	    mongoc_database_create_collection (database,
 					       collName,
@@ -125,7 +115,7 @@ int MongoInterface::insertRecords(std::vector<Record*> &records) {
 					       &error);
 
 	if (!collection) {
-	    /* code 48 is NamespaceExists, see error_codes.err in mongodb source */
+   	    // code 48 is NamespaceExists, see error_codes.err in mongodb source 
 	    if (error.code == 48) {
 		collection = mongoc_database_get_collection (database, collName);
 	    } else {
@@ -133,11 +123,27 @@ int MongoInterface::insertRecords(std::vector<Record*> &records) {
 		goto done;
 	    }
 	}
+	printf("set collection %s\n", record->getCollectionName().c_str());
+	record->setCollection(collection);
+    }
+ retry_transaction:
+    printf("Starting transaction...\n");
+    r = mongoc_client_session_start_transaction (session, txn_opts, &error);
+    if (!r) {
+	MONGOC_ERROR ("Failed to start transaction: %s", error.message);
+	goto done;
+    }
+    printf("started transaction\n");
+    printf("Inserting %lu Record into mongo\n", records.size());
+    // for each Record(ie collection), insert the many documents per.
+    for (auto *record : records) {
 
+	bson_destroy (&reply);
 
 	//const bson_t** docs = const_cast<const bson_t**>(record->getDocs());
+	printf("Inserting %lu docs into mongo\n", record->size());
 	const bson_t** docs = record->getDocs();
-	r = mongoc_collection_insert_many ( collection,
+	r = mongoc_collection_insert_many ( record->getCollection(),
 					    docs,
 					    record->size(),
 					    insert_opts,
@@ -145,8 +151,10 @@ int MongoInterface::insertRecords(std::vector<Record*> &records) {
 					    &error);
 	//	r = mongoc_collection_insert_one (
 	//collection, doc, insert_opts, &reply, &error);
-
-	bson_destroy (doc);
+	printf("Inserted %lu docs\n", record->size());
+	// TODO: will need to call a destroy on this at some point...
+	// Probably in the record destructor
+	//bson_destroy (docs);
 
 	if (!r) {
 	    MONGOC_ERROR ("Insert failed: %s", error.message);
@@ -172,13 +180,18 @@ int MongoInterface::insertRecords(std::vector<Record*> &records) {
     start = bson_get_monotonic_time ();
     while (bson_get_monotonic_time () - start < 5 * 1000 * 1000) {
 	bson_destroy (&reply);
+	printf("Attempting commit...\n");
 	r = mongoc_client_session_commit_transaction (session, &reply, &error);
+	printf("Returned from session commit.\n");
 	if (r) {
 	    /* success */
+	    printf("Successful commit\n");
 	    break;
 	} else {
 	    MONGOC_ERROR ("Warning: commit failed: %s", error.message);
+	    printf("commit failed: %s\n", error.message);
 	    if (mongoc_error_has_label (&reply, "TransientTransactionError")) {
+		printf("Transient error, retrying transaction\n");
 		goto retry_transaction;
 	    } else if (mongoc_error_has_label (&reply,
 					       "UnknownTransactionCommitResult")) {
@@ -189,6 +202,7 @@ int MongoInterface::insertRecords(std::vector<Record*> &records) {
 	    /* unrecoverable error trying to commit */
 	    break;
 	}
+	printf("retrying commit...\n");
     }
 
     exit_code = EXIT_SUCCESS;
@@ -201,7 +215,7 @@ int MongoInterface::insertRecords(std::vector<Record*> &records) {
     mongoc_transaction_opts_destroy (txn_opts);
     mongoc_transaction_opts_destroy (default_txn_opts);
     mongoc_client_session_destroy (session);
-    mongoc_collection_destroy (collection);
+    //    mongoc_collection_destroy (collection);
     mongoc_database_destroy (database);
     mongoc_uri_destroy (uri);
     mongoc_client_destroy (client);
@@ -265,7 +279,10 @@ std::vector<ConfigItem*>* MongoInterface::getConfigs(std::string configCollName)
     
     if (mongoc_cursor_error (cursor, &error)) {
 	fprintf (stderr, "Cursor Failure: %s\n", error.message);
-	return nullptr; // EXIT_FAILURE
+	std::string message = "GetConfig failed: ";
+	message += error.message;
+	throw std::runtime_error(message);
+	//return nullptr; // EXIT_FAILURE
     }
 
     bson_destroy (&query);

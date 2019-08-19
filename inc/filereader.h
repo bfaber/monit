@@ -11,12 +11,13 @@ class FileReader {
     void getByLine(std::vector<std::string> &lines);
     bool getNextNLines(std::vector<std::string> &lines, int n);
     bool getNextNLines2(std::vector<std::string> &lines, int n);
+    void close();
+    void readWholeFile();
 
  private:
     std::streamsize PER_LINE_BUFFER_SIZE = 1024;
 
-    std::string fileName;
-    int filesize;
+    std::string fileName;   
     std::ifstream logStream;
     char* remainder;
     uint remSize;

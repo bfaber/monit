@@ -19,10 +19,6 @@ public:
     bool readFiles();
     
 private:
-    int  findGroups(const char* text, const pcre *comiledRegex, pcre_jit_stack* jit, pcre_extra *extra, std::vector<std::string> &groups);
-    const pcre* compileRegex(std::string regex);
-
-
     // will batch up the configItem data per filename so that we're only opening
     // a single file per set of regex
 

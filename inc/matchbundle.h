@@ -21,10 +21,11 @@ public:
     size_t size();
     ConfigItem* getConfigItem();
     std::vector<std::vector<std::string>> getBundle();
-    
+    void retry(long atTimeMs);
+    long getRetryTime();
 private:
     ConfigItem *config;
     std::vector<std::vector<std::string>> groupBundle;
-
+    long retryTime;
 };
 #endif

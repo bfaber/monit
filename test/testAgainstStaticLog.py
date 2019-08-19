@@ -28,16 +28,18 @@ for doc in docs:
     file  = doc['filename']
     resultsCollection = doc['collectionName']
 
-t0 = time.time()    
-f = open(file)
-compiledRegex = re.compile(regex)
 
+t0 = time.time()
+print "pre compiled regex time: " + str(t0)
+compiledRegex = re.compile(regex)
+f = open(file)
 matches = []
 for l in f.readlines():
     match = compiledRegex.match(l)
     if match != None:
-        matches.append(match)
+        matches.append(match.group())
 t1 = time.time()
+print "post match found file read etc time: " + str(t1)
 pythonFoundCount = len(matches)
 print "python found count: " + str(pythonFoundCount)
 print "python parse DT: " + str(t1 - t0)

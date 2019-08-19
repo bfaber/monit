@@ -9,13 +9,14 @@
 
 class MatchBuffer {
  public:
-    
+    MatchBuffer();
     void addMatches(MatchBundle *matches);
     void getMatchesByName(std::map<std::string, std::vector<MatchBundle*>> &matchesByName);
     void clearBuffers();
+    size_t size();
     
  private:
     std::map<std::string, std::vector<MatchBundle*>> matchesByName;
-
+    int count;
 };
 #endif

@@ -40,33 +40,51 @@ LogReaderNew::LogReaderNew(std::vector<ConfigItem*> *cfgs, RecordProcessorInterf
 /**
  * Read the file line by line, parse each line with regex, capturing whatever groups exist.
  * Group count given by pcre_exec return value (rc).  
- * readFile will use the interface provided by the RecordProcessorInterface for dealing with matches.  The matches vector will be allocated here and then moved to the RecordProcessor via uniquepointer.*  TODO:  configItems should be bundled by filename so that all regexes assoc with a file
- *  can be run when the file is open.  There should not be opening and reading of the file
- *  multiple times.   
+ * readFile will use the interface provided by the RecordProcessorInterface for dealing with matches.  The matches vector will be allocated here and then moved to the RecordProcessor via uniquepointer.
  */
 bool LogReaderNew::readFiles() {
-    printf("reading files!\n");
     // map<filename, vec<matchbundle>>
-    for(auto &kv : matchBundlesPerFilename) {
+    for( auto &kv : matchBundlesPerFilename ) {
+
+	// the logreader process should be able to run without existence of
+	// log files.  Those processes might be yet to be started.
+	// todo: we might want to complain if log dne (configurable)
+	if( Util::timeMs() < kv.second[0]->getRetryTime() ) {	
+	    continue;
+	}
 	
-	std::ifstream logfile;
-	const char* logfilename = kv.first.c_str();
+	std::string filename = kv.first;
+	std::vector<MatchBundle*> bundles = kv.second;
+	    
+	const char* logfilename = filename.c_str();
 	//	printf("logfilename: %s\n", logfilename);
 
+	std::ifstream logfile;
 	logfile.open(logfilename, std::ios_base::in);
+	
 	if( logfile.is_open() ) {
 	    //  printf("logfile open\n");
-	    long t0 = Util::timeMs();    
-	    char buffer[1024];
+	    long t0 = Util::timeMs();
 	    std::streamsize buffSize = 1024;
+	    char buffer[buffSize];
+
 	    int linect = 0;
-	    while(logfile.getline(buffer, buffSize)) {
+	    //logfile.seekg(0, std::ios_base::end);
+	    //std::size_t size = logfile.tellg();
+	    //printf("File Size: %d\n", size);
+	    //logfile.seekg(0, std::ios_base::beg);	    
+	    //printf("file pos before: %ld\n", logfile.tellg());
+	    //std::streambuf *buf = logfile.rdbuf();
+	    //printf("streambuffer eback: %d, gptr: %d, egptr: %d\n", buf->eback(), buf->gptr(), buf->egptr());
+	    //printf("inavail: %d\n", buf->in_avail());
+	    while( logfile.getline(buffer, buffSize) ) {
+		linect++;
+		//printf("inavail: %d\n", buf->in_avail());
+		//		printf("streambuffer eback: %d, gptr: %d, egptr: %d\n", buf->eback(), buf->gptr(), buf->egptr());
+		//printf("file pos after: %ld\n", logfile.tellg());
 	  
 		/*
-	    logfile.seekg(0, std::ios_base::end);
-	    std::size_t size = logfile.tellg();
-	    printf("File Size: %d\n", size);
-	    logfile.seekg(0, std::ios_base::beg);
+
 	    std::vector<char> wholeFile(size / sizeof(char));
 	    logfile.read((char*) &wholeFile[0], size);
 	    std::vector<std::string> lines;
@@ -80,37 +98,41 @@ bool LogReaderNew::readFiles() {
 	//while(fileReader->getNextNLines2(lines, 1000)) {
 	//}
 		//	for(auto line : lines) {
-	    for(auto *mb : kv.second) {
-		/*
-		 * captures is a strange usage by pcre, must be size multiple of 3, 
-		 * and only first 2 thirds will pass back captured substrings, 
-		 * the rest is a 'workspace' by pcre_exec. See docs on 'ovector':
-		 * https://pcre.org/original/doc/html/pcreapi.html
-		 * captures contains set of pairs marking the beginning and end of 
-		 * matching subgroups.
-		 */
-		std::vector<std::string> groups;
-		const pcre* compiledRegex = mb->getConfigItem()->getCompiledRegex();
-		pcre_jit_stack *jit = mb->getConfigItem()->getJitStack();
-		pcre_extra *extra = mb->getConfigItem()->getJitExtra();
-		int rc = TextParser::findGroups(buffer, compiledRegex, jit, extra, groups);
-		if( ! groups.empty() ) {
-		    //printf("csv: %s\n", csv.c_str());
-		    mb->addGroups(groups);
-		} else {		    
-		    //printf("some other negative value for rc %d\n", rc);
+		for( auto *mb : kv.second ) {
+		    /*
+		     * captures is a strange usage by pcre, must be size multiple of 3, 
+		     * and only first 2 thirds will pass back captured substrings, 
+		     * the rest is a 'workspace' by pcre_exec. See docs on 'ovector':
+		     * https://pcre.org/original/doc/html/pcreapi.html
+		     * captures contains set of pairs marking the beginning and end of 
+		     * matching subgroups.
+		     */
+		    std::vector<std::string> groups;
+		    const pcre* compiledRegex = mb->getConfigItem()->getCompiledRegex();
+		    pcre_jit_stack *jit = mb->getConfigItem()->getJitStack();
+		    pcre_extra *extra = mb->getConfigItem()->getJitExtra();
+		    int rc = TextParser::findGroups(buffer, compiledRegex, jit, extra, groups);
+		    if( ! groups.empty() ) {
+			//printf("csv: %s\n", csv.c_str());
+			mb->addGroups(groups);
+		    } else {		    
+			//printf("some other negative value for rc %d\n", rc);
+		    }
 		}
-	    }
 
 	    }
 
-	long t1 = Util::timeMs();
-	printf("logfileRead DT: %ldms\n", (t1 - t0));
-	// these should be all for the same collection?
-	// no, for the same file, not necessarily the same collection
-	// its processor responsibility to sort by collection to build records
-	processor->receiveMatches(kv.second);
-	}
+	    long t1 = Util::timeMs();
+	    printf("logfileRead %s:DT: %ldms\n", logfilename, (t1 - t0));
+	    // these should be all for the same collection?
+	    // no, for the same file, not necessarily the same collection
+	    // its processor responsibility to sort by collection to build records
+	    processor->receiveMatches(kv.second);
+	} else {
+	    // mark this logfile as not existing atm, should attempt to read again
+	    // in a little bit, do other work instead.
+	    kv.second[0]->retry(Util::timeMs() + 500);
+	}	    
     }        
     return true;   
 }

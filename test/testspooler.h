@@ -13,8 +13,8 @@ class TestSpooler : public MongoSpooler {
     TestSpooler();
 
     virtual void enqueue(std::vector<Record*> &recs) override;
-    Record* popRecord();
+    Record* getRecord(int index);
     std::vector<Record*> recordQueueTest;
-
+    size_t size();
 };
 #endif

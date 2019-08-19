@@ -15,6 +15,7 @@ void MongoSpooler::enqueue(std::vector<Record*> &recs) {
 int MongoSpooler::commitToMongo() {
     
     int result = interface->insertRecords(recordQueue);
+    printf("commit to mongo result: %d\n", result);
     // clear recordQueue
     
 	/*

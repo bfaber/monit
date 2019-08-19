@@ -1,8 +1,13 @@
 
 #include "matchbuffer.h"
 
+MatchBuffer::MatchBuffer() : count(0) {}
+
 void MatchBuffer::addMatches(MatchBundle *matches) {
-    matchesByName[matches->getConfigItem()->getCollectionName()].push_back(matches);
+    //    if(matches->size() > 0) {
+	matchesByName[matches->getConfigItem()->getCollectionName()].push_back(matches);
+	count++;
+	//    }
 }
 
 void MatchBuffer::getMatchesByName(std::map<std::string, std::vector<MatchBundle*>> &ref) {
@@ -15,4 +20,9 @@ void MatchBuffer::getMatchesByName(std::map<std::string, std::vector<MatchBundle
 
 void MatchBuffer::clearBuffers() {
     matchesByName.clear();
+    count = 0;
+}
+
+size_t MatchBuffer::size() {
+    return count;
 }

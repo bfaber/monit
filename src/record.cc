@@ -10,7 +10,7 @@ Record::Record(std::vector<MatchBundle*> &mbs) {
 
 void Record::addRecords(std::vector<MatchBundle*> &mbs) {
     for(auto *mb : mbs) {
-	
+
 	if(collectionName.empty()) {
 	    collectionName = mb->getConfigItem()->getCollectionName();
 	} else if(collectionName != mb->getConfigItem()->getCollectionName()) {
@@ -22,9 +22,9 @@ void Record::addRecords(std::vector<MatchBundle*> &mbs) {
 	ConfigItem *config = mb->getConfigItem();
 	for(auto group : mb->getBundle()) {
 	    bson_t *doc = zipUpCsvWithGroups(config->getCsv(), group);
-	    docs.push_back(doc);			     
-	}
-    }
+	    docs.push_back(doc);
+	}	
+    }    
 }
 
 bson_t* Record::zipUpCsvWithGroups(std::string csv, std::vector<std::string> &group) {
@@ -66,4 +66,13 @@ std::string Record::getCollectionName() {
 size_t Record::size() {
     return docs.size();
 }
+
+mongoc_collection_t* Record::getCollection() {
+    return collection;
+}
+
+void Record::setCollection(mongoc_collection_t* coll) {
+    collection = coll;
+}
+
 

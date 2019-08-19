@@ -7,4 +7,4 @@ class TextParserTest : public ::testing::Test {
 
 };
 
-TEST_F(TextParserTest, ParseRegex) {
+TEST_F(TextParserTest, ParseRegex) {}

@@ -1,12 +1,15 @@
 #include <cstring>
 #include <cassert>
 #include "filereader.h"
+#include "util.h"
 
 FileReader::FileReader(std::string fileName) : fileName(fileName),
 					       remainder(nullptr),
 					       remSize(0) {
     logStream.open(fileName, std::ios_base::in);
 }
+
+
 
 void FileReader::getByLine(std::vector<std::string> &lines) {
     if(logStream.is_open()) {
@@ -62,7 +65,7 @@ bool FileReader::getNextNLines(std::vector<std::string> &lines, int n) {
 	} else {
 	    // still reading from the stream,
 	    // read in the buffer minus the remainder
-	    printf("reading logstream! buffersize: %d\n", bufferSize);
+	    printf("reading logstream! buffersize: %zu\n", bufferSize);
 	    printf("remsize %d\n", remSize);
 	    logStream.read(&buffer[remSize], readBufferSize);
 	}
@@ -98,7 +101,7 @@ bool FileReader::getNextNLines(std::vector<std::string> &lines, int n) {
 }
 
 bool FileReader::getNextNLines2(std::vector<std::string> &lines, int n) {
-    if( logStream.eof() && remSize == 0) {
+    if( logStream.eof() && remSize == 0 ) {
 	return false;
     }
     
@@ -150,6 +153,45 @@ bool FileReader::getNextNLines2(std::vector<std::string> &lines, int n) {
     return true;
     
 }
+
+void FileReader::close() {
+    logStream.close();
+}
+
+void FileReader::readWholeFile() {
+    std::ifstream filestream;
+    filestream.open(fileName, std::ios_base::in);
+    size_t bufferSize = 4096;
+    char buffer[bufferSize];
+    long t0 = Util::timeMs();
+    std::vector<std::string> chunks;
+    // 24ms to read file
+    while(filestream.read(buffer, bufferSize)) {
+	std::string chunk = buffer;
+	chunks.push_back(chunk);
+    } // 69ms to parse into chunks
+    filestream.close();
+    std::vector<char*> lines;
+    lines.reserve(50787); // no help perf
+    char* line = new char[1024];
+    int ct = 0;
+    for(auto chunk : chunks) {
+	for(auto ch : chunk) {
+	    if(ch == '\n') {
+		lines.push_back(line);
+		line = new char[1024];
+		ct = 0;
+	    }
+	    line[ct] = ch;
+	    ct++;
+	}
+    } //490ms using std::string for lines,
+    // 277ms using char[1024] arrays on heap.
+    long t1 = Util::timeMs();
+    printf("FileReader DT: %ldms\n", (t1 - t0));
+
+}
+
 
 
 

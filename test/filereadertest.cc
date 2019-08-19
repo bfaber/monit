@@ -1,6 +1,7 @@
 #include "gtest/gtest.h"
 
 #include "filereader.h"
+#include "util.h"
 
 class FileReaderTest : public ::testing::Test {    
 public:
@@ -13,6 +14,7 @@ public:
 
     };
     void TearDown() override {
+	fileReader->close();
     };
 
 };
@@ -46,13 +48,21 @@ TEST_F(FileReaderTest, ReadFile) {
     ASSERT_STREQ(line20, lines[9].c_str());
 }
 
-TEST_F(FileReaderTest, ReadWholeFile) {
+TEST_F(FileReaderTest, ReadWholeFileDoNothing) {
+    long t0 = Util::timeMs();
+    fileReader->readWholeFile();
+    long t1 = Util::timeMs();
+    printf("ReadWholeFileDoNothing DT: %ldms\n", (t1 - t0));    
+}
+
+TEST_F(FileReaderTest, ReadWholeFileByOneThousand) {
     // there are 50787 lines in the log file.
     // get them all, see if last line matches.
 
     int loopCt = 0;
     std::vector<std::string> lines;
-
+    long t0 = Util::timeMs();
+    lines.reserve(1000);
     while(fileReader->getNextNLines2(lines, 1000)) {
 	if(lines.size() != 1000) {
 	    EXPECT_EQ(787, lines.size());
@@ -63,6 +73,8 @@ TEST_F(FileReaderTest, ReadWholeFile) {
 
 	loopCt++;
     }
+    long t1 = Util::timeMs();
+    printf("ReadWholeFileByOneThousand::DT %ldms\n", (t1 - t0));
     EXPECT_EQ(51, loopCt);
     EXPECT_EQ(787, lines.size());
     
@@ -70,8 +82,8 @@ TEST_F(FileReaderTest, ReadWholeFile) {
     EXPECT_STREQ(lastLine, lines[lines.size() - 1].c_str());
 }
 
-TEST_F(FileReaderTest, ReadWholeFile2) {
-
+TEST_F(FileReaderTest, ReadWholeFileByOneHundred) {
+    long t0 = Util::timeMs();
     int lineCt = 0;
     std::vector<std::string> lines;
     while(fileReader->getNextNLines2(lines, 100)) {
@@ -84,6 +96,64 @@ TEST_F(FileReaderTest, ReadWholeFile2) {
 	}
 	lines.clear();
     }
+    long t1 = Util::timeMs();
+    printf("ReadWholeFileByOneHundred::DT %ldms\n", (t1 - t0));
+    EXPECT_EQ(50787, lineCt);    
+}
+
+TEST_F(FileReaderTest, ReadWholeFileByTen) {
+    long t0 = Util::timeMs();
+    int lineCt = 0;
+    std::vector<std::string> lines;
+    while(fileReader->getNextNLines2(lines, 10)) {
+	if(lines.size() != 10) {
+	    EXPECT_EQ(7, lines.size());
+	    lineCt += 7;
+	} else {
+	    EXPECT_EQ(10, lines.size());
+	    lineCt += 10;
+	}
+	lines.clear();
+    }
+    long t1 = Util::timeMs();
+    printf("ReadWholeFileByOneHundred::DT %ldms\n", (t1 - t0));
+    EXPECT_EQ(50787, lineCt);    
+}
+TEST_F(FileReaderTest, ReadWholeFileByFour) {
+    long t0 = Util::timeMs();
+    int lineCt = 0;
+    std::vector<std::string> lines;
+    while(fileReader->getNextNLines2(lines, 4)) {
+	if(lines.size() != 4) {
+	    EXPECT_EQ(3, lines.size());
+	    lineCt += 3;
+	} else {
+	    EXPECT_EQ(4, lines.size());
+	    lineCt += 4;
+	}
+	lines.clear();
+    }
+    long t1 = Util::timeMs();
+    printf("ReadWholeFileByOneFour::DT %ldms\n", (t1 - t0));
+    EXPECT_EQ(50787, lineCt);    
+}
+
+TEST_F(FileReaderTest, ReadWholeFileByTenThousand) {
+    long t0 = Util::timeMs();
+    int lineCt = 0;
+    std::vector<std::string> lines;
+    while(fileReader->getNextNLines2(lines, 10000)) {
+	if(lines.size() != 10000) {
+	    EXPECT_EQ(10787, lines.size());
+	    lineCt += 10787;
+	} else {
+	    EXPECT_EQ(10000, lines.size());
+	    lineCt += 10000;
+	}
+	lines.clear();
+    }
+    long t1 = Util::timeMs();
+    printf("ReadWholeFileByOneHundred::DT %ldms\n", (t1 - t0));
     EXPECT_EQ(50787, lineCt);    
 }
 

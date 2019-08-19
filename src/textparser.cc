@@ -1,4 +1,7 @@
+#include <iostream>
+
 #include "textparser.h"
+
 
 const pcre* TextParser::compileRegex(std::string regex) {
 	const char* error;
@@ -18,9 +21,11 @@ int TextParser::findGroups(const char* text, const pcre* compiledRegex, pcre_jit
     
     int captures[30]; // docs call this 'ovector'
     int rc = pcre_jit_exec(compiledRegex, extra, text, strlen(text), 0, 0, captures, 30, jit);
-    //    std::cout << text << '\n';
+    //std::cout << text << '\n';
+    //printf("strlen %d\n", strlen(text));
+
     if( rc == PCRE_ERROR_NOMATCH ) {
-	//	std::cout << "no match!" << std::endl;
+	//std::cout << "no match!" << std::endl;
     } else if( rc > 0 ) {
 
 	//	printf("MATCH! RC Value: %d\n", rc);
