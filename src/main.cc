@@ -114,13 +114,19 @@ int main(int argc, char** argv) {
     auto *rp = new MongoRecordProcessor(ms);
     auto *lr = new LogReaderNew(configs, rp);
 
-    //auto *rpTh = new ProcessorExecutor(rp, ms);
-    //    auto *lrTh = new LogReaderExecutor(lr);
+    auto *rpTh = new ProcessorExecutor(rp, ms);
+    auto *lrTh = new LogReaderExecutor(lr);
+
+    std::thread startedTh = ProcessorExecutor::start(rpTh);
+    std::thread startedLrTh = LogReaderExecutor::start(lrTh);
+
+    startedTh.join();
+    startedLrTh.join();
     // two threads, one to read the files and one to processmatches and send to mongo.
     // the mongo match consumer thread starts first.
     // thread executors manage starting and stopping of threads here. 
-        lr->readFiles(); //logreaderexecutor thread running, probably after the mongo/matchprocessor thread is running
-        rp->processMatches();
-        ms->commitToMongo();
+    //    lr->readFiles(); //logreaderexecutor thread running, probably after the mongo/matchprocessor thread is running
+    //        rp->processMatches();
+    //ms->commitToMongo();
     return 0;
 }

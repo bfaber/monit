@@ -3,7 +3,6 @@
 
 #include <string>
 #include <vector>
-#include <mutex>
 
 #include "matchbundle.h"
 #include "mongointerface.h"
@@ -23,7 +22,6 @@ public:
     
 private:
     MongoInterface *interface;
-    std::mutex mutex;
     std::vector<Record*> recordQueue;    
 
 };

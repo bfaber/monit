@@ -10,6 +10,8 @@
  */
 class RecordProcessorInterface {
  public:
-    virtual void receiveMatches(std::vector<MatchBundle*> &matches) = 0;
+    virtual void addMatchHandler(MatchBundle *mb) = 0;
+    virtual void receiveMatches() = 0;
+    virtual bool processMatches() = 0;
 };
 #endif

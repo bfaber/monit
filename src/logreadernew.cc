@@ -8,6 +8,7 @@
 #include "textparser.h"
 
 
+
 LogReaderNew::LogReaderNew(std::vector<ConfigItem*> *cfgs, RecordProcessorInterface *recprocessor) :
     processor(recprocessor) {
     
@@ -32,10 +33,10 @@ LogReaderNew::LogReaderNew(std::vector<ConfigItem*> *cfgs, RecordProcessorInterf
     // set up configs per log file to make parsing more efficient
     for(auto *config : *cfgs) {
 	auto *mb = new MatchBundle(config);
-	matchBundlesPerFilename[config->getFileName()].push_back(mb);
+	matchBundlesPerFilename[config->getFileName()].addBundle(config->getFileName(), mb);
+	recprocessor->addMatchHandler(mb);
     }    
 }
-
 
 /**
  * Read the file line by line, parse each line with regex, capturing whatever groups exist.
@@ -43,18 +44,20 @@ LogReaderNew::LogReaderNew(std::vector<ConfigItem*> *cfgs, RecordProcessorInterf
  * readFile will use the interface provided by the RecordProcessorInterface for dealing with matches.  The matches vector will be allocated here and then moved to the RecordProcessor via uniquepointer.
  */
 bool LogReaderNew::readFiles() {
-    // map<filename, vec<matchbundle>>
+    // map<filename, vec<regexmatches>>
+    // map<filename, FileBundle>
+    bool addedGroups = false;
     for( auto &kv : matchBundlesPerFilename ) {
-
+	std::string filename = kv.first;
+	FileBundle *filebundle = &kv.second;
+	std::vector<MatchBundle*> bundles = kv.second.getBundles();
+	
 	// the logreader process should be able to run without existence of
 	// log files.  Those processes might be yet to be started.
 	// todo: we might want to complain if log dne (configurable)
-	if( Util::timeMs() < kv.second[0]->getRetryTime() ) {	
+	if( Util::timeMs() < filebundle->getRetryTime() ) {	
 	    continue;
 	}
-	
-	std::string filename = kv.first;
-	std::vector<MatchBundle*> bundles = kv.second;
 	    
 	const char* logfilename = filename.c_str();
 	//	printf("logfilename: %s\n", logfilename);
@@ -63,15 +66,16 @@ bool LogReaderNew::readFiles() {
 	logfile.open(logfilename, std::ios_base::in);
 	
 	if( logfile.is_open() ) {
-	    //  printf("logfile open\n");
+
 	    long t0 = Util::timeMs();
 	    std::streamsize buffSize = 1024;
 	    char buffer[buffSize];
 
 	    int linect = 0;
-	    //logfile.seekg(0, std::ios_base::end);
-	    //std::size_t size = logfile.tellg();
-	    //printf("File Size: %d\n", size);
+
+	    // this works, can seek to this position and read from there.
+	    printf("starting from %ld chars in\n", filebundle->getCharCount());
+	    logfile.seekg(filebundle->getCharCount(), std::ios_base::beg);
 	    //logfile.seekg(0, std::ios_base::beg);	    
 	    //printf("file pos before: %ld\n", logfile.tellg());
 	    //std::streambuf *buf = logfile.rdbuf();
@@ -81,24 +85,29 @@ bool LogReaderNew::readFiles() {
 		linect++;
 		//printf("inavail: %d\n", buf->in_avail());
 		//		printf("streambuffer eback: %d, gptr: %d, egptr: %d\n", buf->eback(), buf->gptr(), buf->egptr());
-		//printf("file pos after: %ld\n", logfile.tellg());
-	  
+		
+		filebundle->addCharCount(logfile.gcount());
+		if( logfile.gcount() == 0 ) {
+		    printf("No new chars read on %s\n", logfilename);
+		    filebundle->setRetryTime(Util::timeMs() + 500);
+		}
+		//printf("filebundle charct %ld\n", filebundle->getCharCount());
 		/*
 
-	    std::vector<char> wholeFile(size / sizeof(char));
-	    logfile.read((char*) &wholeFile[0], size);
-	    std::vector<std::string> lines;
-	    parseFile(wholeFile, lines);
-	    for(auto line : lines) {
+		  std::vector<char> wholeFile(size / sizeof(char));
+		  logfile.read((char*) &wholeFile[0], size);
+		  std::vector<std::string> lines;
+		  parseFile(wholeFile, lines);
+		  for(auto line : lines) {
 		*/
 	
-	//auto *fileReader = new FileReader(kv.first);
-	//std::vector<std::string> lines;
-	//fileReader->getByLine(lines);
-	//while(fileReader->getNextNLines2(lines, 1000)) {
-	//}
+		//auto *fileReader = new FileReader(kv.first);
+		//std::vector<std::string> lines;
+		//fileReader->getByLine(lines);
+		//while(fileReader->getNextNLines2(lines, 1000)) {
+		//}
 		//	for(auto line : lines) {
-		for( auto *mb : kv.second ) {
+		for( auto *mb : bundles ) {
 		    /*
 		     * captures is a strange usage by pcre, must be size multiple of 3, 
 		     * and only first 2 thirds will pass back captured substrings, 
@@ -115,26 +124,29 @@ bool LogReaderNew::readFiles() {
 		    if( ! groups.empty() ) {
 			//printf("csv: %s\n", csv.c_str());
 			mb->addGroups(groups);
-		    } else {		    
+			addedGroups = true;
+		    } else {
+			
 			//printf("some other negative value for rc %d\n", rc);
 		    }
 		}
-
 	    }
-
+	    //printf("final charct: %ld\n", filebundle->getCharCount());
 	    long t1 = Util::timeMs();
 	    printf("logfileRead %s:DT: %ldms\n", logfilename, (t1 - t0));
-	    // these should be all for the same collection?
-	    // no, for the same file, not necessarily the same collection
-	    // its processor responsibility to sort by collection to build records
-	    processor->receiveMatches(kv.second);
+	    // receiveMatches now just triggers the processing of the matches in the
+	    // mongorecordprocessor, and returns once they've been copied out
+	    // of their MatchBundle objects
+	    // this basically just blocks this thread while the next thread empties
+	    // the buffers in MatchBundle objs
 	} else {
 	    // mark this logfile as not existing atm, should attempt to read again
 	    // in a little bit, do other work instead.
-	    kv.second[0]->retry(Util::timeMs() + 500);
-	}	    
-    }        
-    return true;   
+	    filebundle->setRetryTime(Util::timeMs() + 500);
+	}
+    }
+    processor->receiveMatches();
+    return addedGroups;   
 }
 
 

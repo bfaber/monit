@@ -4,6 +4,8 @@
 #include <sstream>
 #include <iostream>
 #include <sys/time.h>
+#include <chrono>
+#include <thread>
 
 #include "util.h"
 
@@ -35,4 +37,8 @@ void Util::getLinesFromBuffer(char* buffer, std::vector<std::string> &lines) {
     while(std::getline(stream, line, '\n')) {
 	lines.push_back(line);
     }
+}
+
+void Util::sleepMs(unsigned long ms) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(ms));
 }

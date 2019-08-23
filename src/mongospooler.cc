@@ -4,19 +4,21 @@ MongoSpooler::MongoSpooler(MongoInterface *mi) : interface(mi) {
 }
 
 void MongoSpooler::enqueue(std::vector<Record*> &recs) {
-    mutex.lock();
     for(auto *rec : recs) {
 	recordQueue.push_back(rec);
     }
-    mutex.unlock();
 }
 
 // take the collection name, the pairs, and insert into mongo.
 int MongoSpooler::commitToMongo() {
-    
+    printf("CommitToMongo %lu records\n", recordQueue.size());
     int result = interface->insertRecords(recordQueue);
     printf("commit to mongo result: %d\n", result);
     // clear recordQueue
+    for( auto *rec : recordQueue ) {
+	delete rec;
+    }
+    recordQueue.clear();
     
 	/*
     mongoc_client_t *client;

@@ -1,7 +1,15 @@
 #include "matchbundle.h"
 
-MatchBundle::MatchBundle(ConfigItem *ci) : config(ci),
-					   retryTime(0) {
+MatchBundle::MatchBundle(ConfigItem *ci) : config(ci) {}
+MatchBundle::~MatchBundle() {
+    // dont del config.    
+}
+
+MatchBundle::MatchBundle(MatchBundle *mb) {
+    config = mb->config;
+    for( auto groups : mb->groupBundle ) {
+	groupBundle.push_back(groups);
+    }
 }
 
 void MatchBundle::addGroups(std::vector<std::string> groups) {
@@ -20,10 +28,9 @@ std::vector<std::vector<std::string>> MatchBundle::getBundle() {
     return groupBundle;
 }
 
-void MatchBundle::retry(long atTimeMs) {
-    retryTime = atTimeMs;
-}
-
-long MatchBundle::getRetryTime() {
-    return retryTime;
+void MatchBundle::clear() {
+    for( auto groups : groupBundle ) {
+	groups.clear();
+    }
+    groupBundle.clear();
 }

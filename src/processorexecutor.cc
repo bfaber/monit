@@ -1,4 +1,5 @@
 #include "processorexecutor.h"
+#include "util.h"
 
 std::thread ProcessorExecutor::start(ProcessorExecutor *inst) {
     std::thread th(*inst);
@@ -17,9 +18,9 @@ void ProcessorExecutor::operator()() {
     bool stop = stopThread;
     mutex.unlock();
 
-    while(!stop) {
-	if(!recordProcessor->processMatches()) {
-	     sleep(1);
+    while( !stop ) {
+	if( !recordProcessor->processMatches() ) {
+	    Util::sleepMs(1);
 	} else {
 	    mongoSpooler->commitToMongo();
 	}

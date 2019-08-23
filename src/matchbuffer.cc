@@ -1,13 +1,13 @@
 
 #include "matchbuffer.h"
 
-MatchBuffer::MatchBuffer() : count(0) {}
+// This should only have the MatchBundles as generated at the start of the logreader:
+// the groups can be copied over into them here.
+// size should be basically the number of group vectors bundled in each matchbuffer obj.
+// the matchbuffer is in the matchbundle is in the logreader and the mongorecordprocessor
 
-void MatchBuffer::addMatches(MatchBundle *matches) {
-    //    if(matches->size() > 0) {
-	matchesByName[matches->getConfigItem()->getCollectionName()].push_back(matches);
-	count++;
-	//    }
+void MatchBuffer::addHandler(MatchBundle *matchHandler) {
+    matchesByName[matchHandler->getConfigItem()->getCollectionName()].push_back(matchHandler);
 }
 
 void MatchBuffer::getMatchesByName(std::map<std::string, std::vector<MatchBundle*>> &ref) {
@@ -19,10 +19,20 @@ void MatchBuffer::getMatchesByName(std::map<std::string, std::vector<MatchBundle
 }
 
 void MatchBuffer::clearBuffers() {
-    matchesByName.clear();
-    count = 0;
+    for( auto &kv : matchesByName ) {
+	for( auto *mb : kv.second ) {
+	    mb->clear();
+	}
+    }
 }
 
+// how many records have we accrued
 size_t MatchBuffer::size() {
+    size_t count = 0;
+    for( auto &kv : matchesByName ) {
+	for( auto *mb : kv.second ) {
+	    count += mb->size();
+	}
+    }
     return count;
 }

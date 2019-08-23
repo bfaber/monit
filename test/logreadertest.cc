@@ -107,7 +107,6 @@ TEST_F(LogReaderNewTest, CheckProcessorReceivesMatches) {
     configs->push_back(ci);
 
     auto *reader = new LogReaderNew(configs, testproc);
-
     
     reader->readFiles();
 
@@ -163,7 +162,9 @@ TEST_F(LogReaderNewTest, CheckProcessorProcessesMatches) {
 
     reader->readFiles();
 
-    EXPECT_EQ(1, processor->getMatchBufferSize());
+    // after readfiles completes, receiveMatches was called, copying
+    // everything out of the match bundle buffers
+    EXPECT_EQ(0, processor->getMatchBufferSize());
     
     processor->processMatches();
     ASSERT_EQ(1, testspool->recordQueueTest.size());
@@ -174,7 +175,7 @@ TEST_F(LogReaderNewTest, CheckProcessorProcessesMatches) {
     // and verify the records produced. 
     //    csv->processMatches();
     // using testspooler to get to records right before mongo.
-    Record* rec = testspool->getRecord(0);
+    Record* rec = testspool->recordQueueTest[0];
     ASSERT_NE(nullptr, rec);
     ASSERT_NE(rec->getDocs(), nullptr);
     const bson_t *doc = rec->getDocs()[0];
@@ -182,6 +183,33 @@ TEST_F(LogReaderNewTest, CheckProcessorProcessesMatches) {
 
     printf("testspooler record 0: %s\n", json);
     EXPECT_STREQ("{ \"requestId\" : \"RQ3279b11099d777e5ce4308aea6f1dc8d3bc72725\" }", json);
+}
+
+TEST_F(LogReaderNewTest, CheckReaderMultipleCallsToReadFiles) {
+    // TODO: use c++17 filesystem for nicer things
+    //    EXPECT_TRUE(std::filesystem::exists(file));
+    std::vector<ConfigItem*> *configs = new std::vector<ConfigItem*>();
+    configs->push_back(ci);
+    //    auto *testmongo = new TestMongoInterface();
+    auto *testspool = new TestSpooler();
+    auto *processor = new MongoRecordProcessor(testspool);
+    auto *reader = new LogReaderNew(configs, processor);
+
+    std::ifstream f(file.c_str());
+    ASSERT_TRUE(f.good());        
+
+    reader->readFiles();
+
+    EXPECT_EQ(0, processor->getMatchBufferSize());
+    
+    reader->readFiles(); // shouldnt get more matches.
+    EXPECT_EQ(0, processor->getMatchBufferSize());
+    processor->processMatches();
+    ASSERT_EQ(1, testspool->size());
+
+    
+    Record* rec = testspool->recordQueueTest[0];    
+    EXPECT_EQ(50787, rec->size());
 }
 
 TEST_F(LogReaderNewTest, CheckProcessorProcessesMatchesTwoFiles) {
@@ -212,7 +240,7 @@ TEST_F(LogReaderNewTest, CheckProcessorProcessesMatchesTwoFiles) {
 
     reader->readFiles();
 
-    EXPECT_EQ(2, processor->getMatchBufferSize());
+    EXPECT_EQ(0, processor->getMatchBufferSize());
     
     processor->processMatches();
     ASSERT_EQ(2, testspool->recordQueueTest.size());
@@ -224,27 +252,29 @@ TEST_F(LogReaderNewTest, CheckProcessorProcessesMatchesTwoFiles) {
     //    csv->processMatches();
     // using testspooler to get to records right before mongo.
     ASSERT_EQ(2, testspool->size());
-    Record* rec = testspool->getRecord(1);
-    ASSERT_EQ(rec->getCollectionName(), "testResultData");
-    ASSERT_EQ(rec->size(), 50787);
-    ASSERT_NE(nullptr, rec);
-    ASSERT_NE(rec->getDocs(), nullptr);
-    const bson_t *doc = rec->getDocs()[0];
-    const char* json = bson_as_json(doc, nullptr);
+    for( auto *rec : testspool->recordQueueTest ) {
+	if( rec->getCollectionName() == std::string("testResultData")) {
+	    ASSERT_EQ(rec->getCollectionName(), "testResultData");
+	    ASSERT_EQ(rec->size(), 50787);
+	    ASSERT_NE(nullptr, rec);
+	    ASSERT_NE(rec->getDocs(), nullptr);
+	    const bson_t *doc = rec->getDocs()[0];
+	    const char* json = bson_as_json(doc, nullptr);
 
-    printf("testspooler record 0: %s\n", json);
-    EXPECT_STREQ("{ \"requestId\" : \"RQ3279b11099d777e5ce4308aea6f1dc8d3bc72725\" }", json);
+	    printf("testspooler record 0: %s\n", json);
+	    EXPECT_STREQ("{ \"requestId\" : \"RQ3279b11099d777e5ce4308aea6f1dc8d3bc72725\" }", json);
+	} else {
+	    ASSERT_EQ(rec->getCollectionName(), "testMovingLogData");
+	    ASSERT_EQ(rec->size(), 525);
+	    ASSERT_NE(nullptr, rec);
+	    ASSERT_NE(rec->getDocs(), nullptr);
+	    const bson_t *doc2 = rec->getDocs()[0];
+	    const char* json2 = bson_as_json(doc2, nullptr);
 
-    Record* rec2 = testspool->getRecord(0);
-    ASSERT_EQ(rec2->getCollectionName(), "testMovingLogData");
-    ASSERT_EQ(rec2->size(), 525);
-    ASSERT_NE(nullptr, rec2);
-    ASSERT_NE(rec2->getDocs(), nullptr);
-    const bson_t *doc2 = rec2->getDocs()[0];
-    const char* json2 = bson_as_json(doc2, nullptr);
-
-    printf("testspooler record 1: %s\n", json2);
-    EXPECT_STREQ("{ \"requestId\" : \"24265df5-bee4-11e9-9c11-34363bd0b9a8\" }", json2);
+	    printf("testspooler record 1: %s\n", json2);
+	    EXPECT_STREQ("{ \"requestId\" : \"24265df5-bee4-11e9-9c11-34363bd0b9a8\" }", json2);
+	}
+    }
 }
 
 TEST_F(LogReaderNewTest, CheckProcessorProcessesMatchesMultipleLogFilesOneDNE) {
@@ -272,7 +302,7 @@ TEST_F(LogReaderNewTest, CheckProcessorProcessesMatchesMultipleLogFilesOneDNE) {
 
     reader->readFiles();
     
-    EXPECT_EQ(1, processor->getMatchBufferSize());
+    EXPECT_EQ(0, processor->getMatchBufferSize());
     
     processor->processMatches();
     ASSERT_EQ(1, testspool->recordQueueTest.size());
@@ -284,7 +314,7 @@ TEST_F(LogReaderNewTest, CheckProcessorProcessesMatchesMultipleLogFilesOneDNE) {
     //    csv->processMatches();
     // using testspooler to get to records right before mongo.
     ASSERT_EQ(testspool->size(), 1);    
-    Record* rec = testspool->getRecord(0);
+    Record* rec = testspool->recordQueueTest[0];
     ASSERT_EQ(rec->getCollectionName(), "testResultData");
     ASSERT_NE(nullptr, rec);
     ASSERT_NE(rec->getDocs(), nullptr);
@@ -316,7 +346,7 @@ TEST_F(LogReaderNewTest, CheckProcessesMatchesLogFileDNE) {
 
     reader->readFiles();
 
-    //    EXPECT_EQ(1, processor->getMatchBufferSize());
+    EXPECT_EQ(0, processor->getMatchBufferSize());
     
     processor->processMatches();
     ASSERT_EQ(0, testspool->recordQueueTest.size());
@@ -341,6 +371,7 @@ TEST_F(LogReaderNewTest, UtilStringSplitTest)  {
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "LogReaderNewTest.CheckRegexParsingFileTwo";
+    //::testing::GTEST_FLAG(filter) = "LogReaderNewTest.CheckReaderMultipleCallsToReadFiles";
     int res = RUN_ALL_TESTS();
     return res;
 }

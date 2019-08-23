@@ -18,6 +18,6 @@ for i in range(0,numLines):
     #logging.warn("warning! REQUEST: %s", jsonObj)
     logging.debug('%s', jsonObj)
     print "logging stmt: " + str(jsonObj)
-    time.sleep(.1)
+#    time.sleep(.001)
     
 print "Done Logging, logged " + str(numLines) + " lines"

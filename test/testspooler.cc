@@ -11,13 +11,6 @@ void TestSpooler::enqueue(std::vector<Record*> &recs) {
     }
 }
 
-Record* TestSpooler::getRecord(int index) {
-    if(recordQueueTest.size() < index)
-	return nullptr;
-    else
-	return recordQueueTest[index];
-}
-
 size_t TestSpooler::size() {
     return recordQueueTest.size();
 }

@@ -9,8 +9,7 @@
 
 class MatchBuffer {
  public:
-    MatchBuffer();
-    void addMatches(MatchBundle *matches);
+    void addHandler(MatchBundle *matchbundle);    
     void getMatchesByName(std::map<std::string, std::vector<MatchBundle*>> &matchesByName);
     void clearBuffers();
     size_t size();

@@ -16,17 +16,17 @@ class ProcessorExecutor {
 	processorStarted(false),
 	processorStopped(false) {};
     
-    ProcessorExecutor(ProcessorExecutor const &other) : recordProcessor(other.recordProcessor),
+    ProcessorExecutor(ProcessorExecutor const &other) :
 	mongoSpooler(other.mongoSpooler),
 	stopThread(other.stopThread),
 	processorStarted(other.processorStarted),
-	processorStopped(other.processorStopped) {};
+	processorStopped(other.processorStopped) { recordProcessor = other.recordProcessor; printf("copy ctor &other\n");};
     
     ProcessorExecutor(ProcessorExecutor&& other) : recordProcessor(other.recordProcessor),
 	mongoSpooler(other.mongoSpooler),
 	stopThread(other.stopThread),
 	processorStarted(other.processorStarted),
-	processorStopped(other.processorStopped) {};
+						   processorStopped(other.processorStopped) { printf("move ctor &&other\n");};
     
     void operator()();
     static std::thread start(ProcessorExecutor *inst);

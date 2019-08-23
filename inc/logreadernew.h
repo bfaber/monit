@@ -11,6 +11,7 @@
 #include "pcre.h"
 #include "recordprocessorinterface.h"
 #include "configitem.h"
+#include "filebundle.h"
 
 class LogReaderNew {
 public:
@@ -22,7 +23,7 @@ private:
     // will batch up the configItem data per filename so that we're only opening
     // a single file per set of regex
 
-    std::map<std::string, std::vector<MatchBundle*>> matchBundlesPerFilename;
+    std::map<std::string, FileBundle> matchBundlesPerFilename;
     
     RecordProcessorInterface* processor;
 };

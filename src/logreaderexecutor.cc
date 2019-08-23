@@ -1,5 +1,6 @@
 
 #include "logreaderexecutor.h"
+#include "util.h"
 
 std::thread LogReaderExecutor::start(LogReaderExecutor *inst) {
     std::thread th(*inst);
@@ -19,6 +20,13 @@ void LogReaderExecutor::operator()() {
     mutex.unlock();
 
     while(!stop) {
-	logreader->readFiles();
+	if( !logreader->readFiles() ) {
+	    // TODO: we can get nice here and throttle depending on how much we're reading and how long
+	    // it takes to read.
+	    // Would be awesome too to have feedback from the db committing and get some
+	    // automated optimisation with that.
+	    // but maybe it is better to keep the usages here easy to reason about at least for now
+	    Util::sleepMs(10);
+	}
     }
 }

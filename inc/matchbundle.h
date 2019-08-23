@@ -16,16 +16,17 @@
 class MatchBundle {
 public:
     MatchBundle(ConfigItem *ci);
-
+    MatchBundle(MatchBundle *mb);
+    ~MatchBundle();
     void addGroups(std::vector<std::string> groups);
     size_t size();
     ConfigItem* getConfigItem();
     std::vector<std::vector<std::string>> getBundle();
-    void retry(long atTimeMs);
-    long getRetryTime();
+    void clear();
+    
 private:
     ConfigItem *config;
     std::vector<std::vector<std::string>> groupBundle;
-    long retryTime;
+
 };
 #endif
