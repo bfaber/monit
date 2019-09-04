@@ -5,8 +5,10 @@
 
 FileReader::FileReader(std::string fileName) : fileName(fileName),
 					       remainder(nullptr),
+					       fileObj(fileName),
 					       remSize(0) {
     logStream.open(fileName, std::ios_base::in);
+
 }
 
 

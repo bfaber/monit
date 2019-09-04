@@ -33,7 +33,9 @@ LogReaderNew::LogReaderNew(std::vector<ConfigItem*> *cfgs, RecordProcessorInterf
     // set up configs per log file to make parsing more efficient
     for(auto *config : *cfgs) {
 	auto *mb = new MatchBundle(config);
-	matchBundlesPerFilename[config->getFileName()].addBundle(config->getFileName(), mb);
+	FileBundle *fb = new FileBundle(config->getFileName());
+	fb->addBundle(mb);
+	matchBundlesPerFilename[config->getFileName()] = fb;
 	recprocessor->addMatchHandler(mb);
     }    
 }
@@ -49,21 +51,21 @@ bool LogReaderNew::readFiles() {
     bool addedGroups = false;
     for( auto &kv : matchBundlesPerFilename ) {
 	std::string filename = kv.first;
-	FileBundle *filebundle = &kv.second;
-	std::vector<MatchBundle*> bundles = kv.second.getBundles();
+	FileBundle *filebundle = kv.second;
+	std::vector<MatchBundle*> bundles = filebundle->getBundles();
+	FileObject fileHandler = filebundle->getFileHandler(); // works
+	
+	//printf("Copy ctor on filehandler? %s\n", fileHandler.getFileName().c_str());
 	
 	// the logreader process should be able to run without existence of
 	// log files.  Those processes might be yet to be started.
 	// todo: we might want to complain if log dne (configurable)
-	if( Util::timeMs() < filebundle->getRetryTime() ) {	
+	if( Util::timeMs() < fileHandler.getRetryTime() ) {	
 	    continue;
 	}
 	    
-	const char* logfilename = filename.c_str();
-	//	printf("logfilename: %s\n", logfilename);
-
 	std::ifstream logfile;
-	logfile.open(logfilename, std::ios_base::in);
+	logfile.open(filename.c_str(), std::ios_base::in);
 	
 	if( logfile.is_open() ) {
 
@@ -88,8 +90,8 @@ bool LogReaderNew::readFiles() {
 		
 		filebundle->addCharCount(logfile.gcount());
 		if( logfile.gcount() == 0 ) {
-		    printf("No new chars read on %s\n", logfilename);
-		    filebundle->setRetryTime(Util::timeMs() + 500);
+		    printf("No new chars read on %s\n", filename.c_str());
+		    fileHandler.setRetryTime(Util::timeMs() + 500);
 		}
 		//printf("filebundle charct %ld\n", filebundle->getCharCount());
 		/*
@@ -133,7 +135,7 @@ bool LogReaderNew::readFiles() {
 	    }
 	    //printf("final charct: %ld\n", filebundle->getCharCount());
 	    long t1 = Util::timeMs();
-	    printf("logfileRead %s:DT: %ldms\n", logfilename, (t1 - t0));
+	    printf("logfileRead %s:DT: %ldms\n", filename.c_str(), (t1 - t0));
 	    // receiveMatches now just triggers the processing of the matches in the
 	    // mongorecordprocessor, and returns once they've been copied out
 	    // of their MatchBundle objects
@@ -142,7 +144,7 @@ bool LogReaderNew::readFiles() {
 	} else {
 	    // mark this logfile as not existing atm, should attempt to read again
 	    // in a little bit, do other work instead.
-	    filebundle->setRetryTime(Util::timeMs() + 500);
+	    fileHandler.setRetryTime(Util::timeMs() + 500);
 	}
     }
     processor->receiveMatches();

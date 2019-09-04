@@ -23,7 +23,7 @@ private:
     // will batch up the configItem data per filename so that we're only opening
     // a single file per set of regex
 
-    std::map<std::string, FileBundle> matchBundlesPerFilename;
+    std::map<std::string, FileBundle*> matchBundlesPerFilename;
     
     RecordProcessorInterface* processor;
 };

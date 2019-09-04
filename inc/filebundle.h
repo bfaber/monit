@@ -5,23 +5,23 @@
 #include <vector>
 
 #include "matchbundle.h"
+#include "fileobject.h"
 
 class FileBundle {
  public:
-    FileBundle();
-    void addBundle(std::string filename, MatchBundle *mb);
+    FileBundle(std::string filename);
+    void addBundle(MatchBundle *mb);
     std::vector<MatchBundle*>& getBundles();
     
     unsigned long getCharCount();
     void addCharCount(unsigned long cc);
-    void setRetryTime(long time);
-    long getRetryTime();
-
+    FileObject& getFileHandler();
     
  private:
+    FileObject fileObj;
     std::string filename;
     std::vector<MatchBundle*> bundles;
     unsigned long charCt;
-    long retry;
+
 };
 #endif

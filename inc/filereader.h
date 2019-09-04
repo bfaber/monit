@@ -5,6 +5,8 @@
 #include <iostream>
 #include <fstream>
 
+#include "fileobject.h"
+
 class FileReader {
  public:
     FileReader(std::string fileName);
@@ -13,7 +15,7 @@ class FileReader {
     bool getNextNLines2(std::vector<std::string> &lines, int n);
     void close();
     void readWholeFile();
-
+    size_t cAPIToReadLines(std::vector<char> &line);
  private:
     std::streamsize PER_LINE_BUFFER_SIZE = 1024;
 
@@ -21,5 +23,6 @@ class FileReader {
     std::ifstream logStream;
     char* remainder;
     uint remSize;
+    FileObject fileObj;
 };
 #endif

@@ -18,7 +18,7 @@ LIB_DIR = -L$(GTEST_LIB_DIR) -L$(MONIT_LIB_DIR)
 
 CFLAGS = -g -Wall -std=c++14 -I$(INC_DIR) -I$(PCRE_INC) -I$(GTEST_INC) -I$(MONGO_INC) -I$(BSON_INC)
 
-_OBJ = configitemtest.o recordtest.o logreadertest.o testspooler.o testprocessor.o testmongointerface.o filereadertest.o
+_OBJ = configitemtest.o recordtest.o logreadertest.o testspooler.o testprocessor.o testmongointerface.o fileobjecttest.o
 OBJ = $(patsubst %,$(OBJ_DIR)/%,$(_OBJ))
 
 $(OBJ_DIR)/%.o: %.cc $(DEPS)
