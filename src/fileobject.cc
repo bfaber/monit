@@ -67,15 +67,12 @@ size_t FileObject::read() {
 }
 
 bool FileObject::readMore() {
-    //    printf("readmore!\n");
+
     lastLineIndex = 0;
     charsRead = 0;
     index = 0;
     bool eof = read();
     if( eof ) {	
-	// so now check to see about log rotation
-	//FILE* file = fopen(fileName.c_str(), "r");
-	//int aFileDescriptor = fileno(file);
 	struct stat statBuf;
 	if( stat(fileName.c_str(), &statBuf) < 0 ) {
 	    printf("Can't fstat file %s\n", fileName.c_str());
@@ -84,21 +81,13 @@ bool FileObject::readMore() {
 	}
 	
 	ino_t aInode = statBuf.st_ino;
-	//if( aFileDescriptor != fileDescriptor ) {
 	if( aInode != inode ) {
-	    //printf("file descriptors don't match!\n");
 	    printf("Inodes don't match!\n");
-	    //printf("aFileDescriptor: %d, fileDesc: %d\n", aFileDescriptor, fileDescriptor);
-	    //closeFile();
-	    //fileDescriptor = aFileDescriptor;
 	    inode = aInode;
-	    //theFile = file;
 	    closeFile();
 	    theFile = fopen(fileName.c_str(), "r");
 	    // attempt read again
 	    eof = read();
-	} else {
-	    //fclose(file);
 	}
     }
     if( !eof ) {
