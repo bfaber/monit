@@ -1,4 +1,7 @@
+#include <errno.h>
+
 #include "fileobject.h"
+
 
 //const size_t BUFFER_SIZE = 4096; // would be nice to hook this directly to the OS, query page size
 
@@ -23,6 +26,13 @@ bool FileObject::openFile() {
     theFile = fopen(fileName.c_str(), "r");
     if(theFile) {
 	fileDescriptor = fileno(theFile);
+	struct stat statBuf;
+	if( fstat(fileDescriptor, &statBuf) < 0 ) {
+	    printf("Couldnt fstat file on open file. %s\n", fileName.c_str());
+	    printf("Can't fstat file %s\n", strerror(errno));
+	    return false;
+	}
+	inode = statBuf.st_ino;
     }
     if(theFile) {
 	//read();
@@ -64,17 +74,31 @@ bool FileObject::readMore() {
     bool eof = read();
     if( eof ) {	
 	// so now check to see about log rotation
-	FILE* file = fopen(fileName.c_str(), "r");
-	int aFileDescriptor = fileno(theFile);
-	if( aFileDescriptor != fileDescriptor ) {
-	    printf("file descriptors don't match!\n");
+	//FILE* file = fopen(fileName.c_str(), "r");
+	//int aFileDescriptor = fileno(file);
+	struct stat statBuf;
+	if( stat(fileName.c_str(), &statBuf) < 0 ) {
+	    printf("Can't fstat file %s\n", fileName.c_str());
+	    printf("Can't fstat file %s\n", strerror(errno));
+	    return false;
+	}
+	
+	ino_t aInode = statBuf.st_ino;
+	//if( aFileDescriptor != fileDescriptor ) {
+	if( aInode != inode ) {
+	    //printf("file descriptors don't match!\n");
+	    printf("Inodes don't match!\n");
+	    //printf("aFileDescriptor: %d, fileDesc: %d\n", aFileDescriptor, fileDescriptor);
+	    //closeFile();
+	    //fileDescriptor = aFileDescriptor;
+	    inode = aInode;
+	    //theFile = file;
 	    closeFile();
-	    fileDescriptor = aFileDescriptor;
-	    theFile = file;
+	    theFile = fopen(fileName.c_str(), "r");
 	    // attempt read again
 	    eof = read();
 	} else {
-	    fclose(file);
+	    //fclose(file);
 	}
     }
     if( !eof ) {

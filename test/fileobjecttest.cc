@@ -111,12 +111,14 @@ TEST_F(FileObjectTest, RotateFile) {
     int fileA = fileno(newFile);
     const char* newLine = "2019-08-23 14:27:20,602 DEBUG {\"machineId\": \"4azzz58ib\", \"userId\": \"ca2724eb-c5ec-11e9-800a-34363bd0b9a8\", \"requestId\": \"ca2724eb-c5ec-11e9-777a-34363bd0b9a8\"}\n";
     fwrite(newLine, sizeof(char), strlen(newLine), newFile);
-
+    fclose(newFile); // need to do this to flush this write, else resume() will fail.
     EXPECT_TRUE(growingFileObj->resume());
     EXPECT_TRUE(growingFileObj->getLine(line));
     line += '\n';
     EXPECT_STREQ(line.c_str(), newLine);
     fclose(newFile);
+
+    ASSERT_EQ(rename(newFileName.c_str(), growingFile.c_str()), 0);
 }
 
 TEST_F(FileObjectTest, FileDescChange) {
@@ -129,7 +131,8 @@ TEST_F(FileObjectTest, FileDescChange) {
     int fileAStreamBDesc = fileno(fileAStreamB);
 
     // each stream gets a uniq FD - if both are writing to the file - unexpected
-    // else if one is "r", the FDs are the same - expected
+    // else if one is "r", the FDs are the same - expected.
+    // except the "r" case doesn't seem to be happening with our log file...
     EXPECT_NE(fileAStreamBDesc, fileADesc);
     
     std::string newName = "testFile1.txt";

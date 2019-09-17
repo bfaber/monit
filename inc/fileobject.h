@@ -2,6 +2,7 @@
 #define FILEOBJECT_H
 
 #include <string>
+#include <sys/stat.h>
 
 class FileObject {
  public:
@@ -25,6 +26,7 @@ class FileObject {
     int index;
     std::string remainingLine;
     int fileDescriptor;
+    ino_t inode;
     bool isOpen;
     int lastLineIndex;
 };
