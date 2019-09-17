@@ -19,12 +19,14 @@ size_t MongoRecordProcessor::getMatchBufferSize() {
 
 // NO filereading is happening while this is called.
 // processor thread might be running, hence mutex on recBuffer
+// This is happening in context of the filereader thread.
 void MongoRecordProcessor::receiveMatches() {
     printf("flush matchbundle buffers\n");
     printf("processmatches matchbuffer size: %lu\n", matchBuffer.size());
 
-    std::map<std::string, std::vector<MatchBundle*>> bundlesByName;
-    matchBuffer.getMatchesByName(bundlesByName);
+    // TODO: why do this...
+    //std::map<std::string, std::vector<MatchBundle*>> bundlesByName;
+    auto &bundlesByName = matchBuffer.getMatchesByName();
 
     std::map<std::string, Record*> recordsByName;
     for(auto& kv : bundlesByName) {
@@ -54,6 +56,7 @@ void MongoRecordProcessor::receiveMatches() {
     matchBuffer.clearBuffers();
 }
 
+// This is happening in context of the recordprocessor thread
 bool MongoRecordProcessor::processMatches() {
 
     // take the csv along with the matches, and zip them up as tuples.

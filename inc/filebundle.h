@@ -15,10 +15,10 @@ class FileBundle {
     
     unsigned long getCharCount();
     void addCharCount(unsigned long cc);
-    FileObject& getFileHandler();
+    FileObject* getFileHandler();
     
  private:
-    FileObject fileObj;
+    FileObject *fileObj;
     std::string filename;
     std::vector<MatchBundle*> bundles;
     unsigned long charCt;

@@ -80,6 +80,7 @@ TEST_F(LogReaderNewTest, CheckRegexParsingFileOne) {
 
 }
 
+
 TEST_F(LogReaderNewTest, CheckRegexParsingFileTwo) {
     // see filereadertest for this same line
     char* line1 = "logging stmt: {\"machineId\": \"4azzz58ib\", \"userId\": \"39d3a40a-bfcb-11e9-b05d-34363bd0b9a8\", \"requestId\": \"39d3a40a-bfcb-11e9-b05d-34363bd0b9a8\"}\n";
@@ -184,7 +185,18 @@ TEST_F(LogReaderNewTest, CheckProcessorProcessesMatches) {
     printf("testspooler record 0: %s\n", json);
     EXPECT_STREQ("{ \"requestId\" : \"RQ3279b11099d777e5ce4308aea6f1dc8d3bc72725\" }", json);
 }
+/*
+TEST_F(LogReaderNewTest, CheckReaderMultipleCallsToReadStaticFileTestProcessor) {
+    std::vector<ConfigItem*> *configs = new std::vector<ConfigItem*>();
+    configs->push_back(ci);
+    //    auto *testmongo = new TestMongoInterface();
+    auto *testspool = new TestSpooler();
+    auto * testproc = new TestProcessor(testspool);
 
+    reader->readFiles();
+    
+}
+*/
 TEST_F(LogReaderNewTest, CheckReaderMultipleCallsToReadFiles) {
     // TODO: use c++17 filesystem for nicer things
     //    EXPECT_TRUE(std::filesystem::exists(file));
@@ -203,9 +215,9 @@ TEST_F(LogReaderNewTest, CheckReaderMultipleCallsToReadFiles) {
     EXPECT_EQ(0, processor->getMatchBufferSize());
     
     reader->readFiles(); // shouldnt get more matches.
-    EXPECT_EQ(0, processor->getMatchBufferSize());
-    processor->processMatches();
-    ASSERT_EQ(1, testspool->size());
+    EXPECT_EQ(0, processor->getMatchBufferSize()); // gets cleared on receiveMatches
+    processor->processMatches(); // converts matches into records
+    ASSERT_EQ(1, testspool->size()); 
 
     
     Record* rec = testspool->recordQueueTest[0];    
@@ -358,7 +370,6 @@ TEST_F(LogReaderNewTest, CheckProcessesMatchesLogFileDNE) {
     //    csv->processMatches();
     // using testspooler to get to records right before mongo.
     ASSERT_EQ(0, testspool->size());
-
 }
 
 TEST_F(LogReaderNewTest, UtilStringSplitTest)  {
@@ -370,8 +381,14 @@ TEST_F(LogReaderNewTest, UtilStringSplitTest)  {
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
+    //::testing::GTEST_FLAG(filter) = "LogReaderNewTest.CheckProcessorReceivesMatches";
     //::testing::GTEST_FLAG(filter) = "LogReaderNewTest.CheckRegexParsingFileTwo";
     //::testing::GTEST_FLAG(filter) = "LogReaderNewTest.CheckReaderMultipleCallsToReadFiles";
+    //::testing::GTEST_FLAG(filter) = "FileObjectTest.ReadASingleLine";
+    //::testing::GTEST_FLAG(filter) = "FileObjectTest.ReadAllTheLines";
+    //::testing::GTEST_FLAG(filter) = "FileObjectTest.FileGrows";
+    //::testing::GTEST_FLAG(filter) = "LogReaderNewTest.CheckProcessorProcessesMatchesMultipleLogFilesOneDNE";
+    //::testing::GTEST_FLAG(filter) = "FileObjectTest.OpenReadOpenRead";
     int res = RUN_ALL_TESTS();
     return res;
 }

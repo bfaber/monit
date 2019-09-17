@@ -7,17 +7,26 @@ FileObject::FileObject(std::string filen) : retry(0),
 					    theFile(nullptr),
 					    charsRead(0),
 					    index(0),
-					    fileDescriptor(0) {
+					    fileDescriptor(0),
+					    isOpen(false),
+					    lastLineIndex(0) {
 
+    printf("FileObject ctor!\n");
 }
 
 bool FileObject::openFile() {
+    if( isOpen ) {
+	return true;
+    }
     charsRead = 0;
     index = 0;
     theFile = fopen(fileName.c_str(), "r");
-    fileDescriptor = fileno(theFile);
     if(theFile) {
-	read();
+	fileDescriptor = fileno(theFile);
+    }
+    if(theFile) {
+	//read();
+	isOpen = true;
 	return true;
     }
     return false;
@@ -48,6 +57,8 @@ size_t FileObject::read() {
 }
 
 bool FileObject::readMore() {
+    //    printf("readmore!\n");
+    lastLineIndex = 0;
     charsRead = 0;
     index = 0;
     bool eof = read();
@@ -62,7 +73,9 @@ bool FileObject::readMore() {
 	    theFile = file;
 	    // attempt read again
 	    eof = read();
-	} 
+	} else {
+	    fclose(file);
+	}
     }
     if( !eof ) {
 	return true;
@@ -72,7 +85,7 @@ bool FileObject::readMore() {
 }
 
 /**
- *  Resume has to make another read, kind of kickstarting
+ *  Resume has to make a read, kind of kickstarting
  * our system here
  */
 bool FileObject::resume() {
@@ -81,60 +94,51 @@ bool FileObject::resume() {
 }
 
 bool FileObject::getLine(std::string &line) {
-
-    if( remainingLine.size() > 0 ) {
-	line += remainingLine;
-    }
-
+    bool eof = false;
     bool newline = false;
-    bool endOfFile = false;
+
+    line.clear();
+
+    line.append(remainingLine);
+    
     while( index < charsRead ) {
-	// hit the newline return it
-	if ( buffer[index] == '\n' ) {
+	if( buffer[index] == '\n' ) {
+	    line.append(&buffer[lastLineIndex], index - lastLineIndex);
+	    //printf("line: %s*****\n", line.c_str());
+	    index++; // inc past newline
+	    lastLineIndex = index;
 	    newline = true;
-	    index++; // get past newline
-	    //	    printf("newline\n");
 	    break;
-	}
-	
-	line += buffer[index];
-	index++;	
+	}	
 
-	
+	index++;
 
-	// hit the buffer, check if eof
 	if( index == charsRead ) {
-	    if(buffer[index] == '\n') {
-		newline = true;
-	    }
-	    endOfFile = !readMore();
-	    if( endOfFile ) {
-		printf("end of buffer, end of file\n");
+	    line.append(&buffer[lastLineIndex], index - lastLineIndex); // carry over
+	    
+	    if( !readMore() ) {
+		// handle end of file case
+		remainingLine += line;
+		eof = true;
 		break;
-	    }
+	    } 
 	}
     }
 
-    if ( newline ) {
-	// got a line, check if also end of buffer; eof
+    if( newline ) {
+	if( index == charsRead ) {
+	    readMore(); // even if readMore fails, we have to ret true here to proc newline
+	}
+	return true;  // goldilocks
+    }
 
-	if( index == charsRead ) { // goldilocks
-	    endOfFile = !readMore();
-	    if( endOfFile ) {
-		return true; // still return true here,
-		// need to process that last line.
-		// next call to getline will fail.
-	    }
-	}
-	return true;
-    } else {	// hit eof
-	printf("def eof!\n");
-	if( line.size() > 0 ) {
-	    remainingLine = line;
-	    printf("actually hit remainingLine\n");
-	}
+    // if we're at the end of the buffer here but eof != true,
+    // then we were goldilocks and had to return true last call to getline
+    if( index == charsRead || eof ) {
 	return false;
     }
+    
+    return true;
 }
 
 void FileObject::closeFile() {

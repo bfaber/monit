@@ -25,5 +25,7 @@ class FileObject {
     int index;
     std::string remainingLine;
     int fileDescriptor;
+    bool isOpen;
+    int lastLineIndex;
 };
 #endif

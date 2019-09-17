@@ -48,67 +48,34 @@ LogReaderNew::LogReaderNew(std::vector<ConfigItem*> *cfgs, RecordProcessorInterf
 bool LogReaderNew::readFiles() {
     // map<filename, vec<regexmatches>>
     // map<filename, FileBundle>
+    printf("readFiles\n");
     bool addedGroups = false;
     for( auto &kv : matchBundlesPerFilename ) {
 	std::string filename = kv.first;
 	FileBundle *filebundle = kv.second;
 	std::vector<MatchBundle*> bundles = filebundle->getBundles();
-	FileObject fileHandler = filebundle->getFileHandler(); // works
+	FileObject *fileHandler = filebundle->getFileHandler(); // works
 	
-	//printf("Copy ctor on filehandler? %s\n", fileHandler.getFileName().c_str());
+	printf("Copy ctor on filehandler? %s\n", fileHandler->getFileName().c_str());
+	printf("Copy ctor on filehandler? %p\n", &fileHandler);
 	
 	// the logreader process should be able to run without existence of
 	// log files.  Those processes might be yet to be started.
 	// todo: we might want to complain if log dne (configurable)
-	if( Util::timeMs() < fileHandler.getRetryTime() ) {	
+	if( Util::timeMs() < fileHandler->getRetryTime() ) {	
 	    continue;
 	}
 	    
-	std::ifstream logfile;
-	logfile.open(filename.c_str(), std::ios_base::in);
-	
-	if( logfile.is_open() ) {
+	//std::ifstream logfile;
+	//logfile.open(filename.c_str(), std::ios_base::in);
 
+	if(fileHandler->openFile()) {
 	    long t0 = Util::timeMs();
-	    std::streamsize buffSize = 1024;
-	    char buffer[buffSize];
-
 	    int linect = 0;
-
-	    // this works, can seek to this position and read from there.
-	    printf("starting from %ld chars in\n", filebundle->getCharCount());
-	    logfile.seekg(filebundle->getCharCount(), std::ios_base::beg);
-	    //logfile.seekg(0, std::ios_base::beg);	    
-	    //printf("file pos before: %ld\n", logfile.tellg());
-	    //std::streambuf *buf = logfile.rdbuf();
-	    //printf("streambuffer eback: %d, gptr: %d, egptr: %d\n", buf->eback(), buf->gptr(), buf->egptr());
-	    //printf("inavail: %d\n", buf->in_avail());
-	    while( logfile.getline(buffer, buffSize) ) {
+	    fileHandler->resume();
+	    std::string buffer;
+	    while( fileHandler->getLine(buffer) ) {
 		linect++;
-		//printf("inavail: %d\n", buf->in_avail());
-		//		printf("streambuffer eback: %d, gptr: %d, egptr: %d\n", buf->eback(), buf->gptr(), buf->egptr());
-		
-		filebundle->addCharCount(logfile.gcount());
-		if( logfile.gcount() == 0 ) {
-		    printf("No new chars read on %s\n", filename.c_str());
-		    fileHandler.setRetryTime(Util::timeMs() + 500);
-		}
-		//printf("filebundle charct %ld\n", filebundle->getCharCount());
-		/*
-
-		  std::vector<char> wholeFile(size / sizeof(char));
-		  logfile.read((char*) &wholeFile[0], size);
-		  std::vector<std::string> lines;
-		  parseFile(wholeFile, lines);
-		  for(auto line : lines) {
-		*/
-	
-		//auto *fileReader = new FileReader(kv.first);
-		//std::vector<std::string> lines;
-		//fileReader->getByLine(lines);
-		//while(fileReader->getNextNLines2(lines, 1000)) {
-		//}
-		//	for(auto line : lines) {
 		for( auto *mb : bundles ) {
 		    /*
 		     * captures is a strange usage by pcre, must be size multiple of 3, 
@@ -122,7 +89,7 @@ bool LogReaderNew::readFiles() {
 		    const pcre* compiledRegex = mb->getConfigItem()->getCompiledRegex();
 		    pcre_jit_stack *jit = mb->getConfigItem()->getJitStack();
 		    pcre_extra *extra = mb->getConfigItem()->getJitExtra();
-		    int rc = TextParser::findGroups(buffer, compiledRegex, jit, extra, groups);
+		    int rc = TextParser::findGroups(buffer.c_str(), compiledRegex, jit, extra, groups);
 		    if( ! groups.empty() ) {
 			//printf("csv: %s\n", csv.c_str());
 			mb->addGroups(groups);
@@ -132,8 +99,10 @@ bool LogReaderNew::readFiles() {
 			//printf("some other negative value for rc %d\n", rc);
 		    }
 		}
+		buffer.clear();
 	    }
-	    //printf("final charct: %ld\n", filebundle->getCharCount());
+	    buffer.clear();
+	    printf("lineCt: %d\n", linect);
 	    long t1 = Util::timeMs();
 	    printf("logfileRead %s:DT: %ldms\n", filename.c_str(), (t1 - t0));
 	    // receiveMatches now just triggers the processing of the matches in the
@@ -141,10 +110,13 @@ bool LogReaderNew::readFiles() {
 	    // of their MatchBundle objects
 	    // this basically just blocks this thread while the next thread empties
 	    // the buffers in MatchBundle objs
-	} else {
-	    // mark this logfile as not existing atm, should attempt to read again
-	    // in a little bit, do other work instead.
-	    fileHandler.setRetryTime(Util::timeMs() + 500);
+	    /*
+	      } else {
+	      // mark this logfile as not existing atm, should attempt to read again
+	      // in a little bit, do other work instead.
+	      fileHandler->setRetryTime(Util::timeMs() + 500);
+	      }
+	    */
 	}
     }
     processor->receiveMatches();

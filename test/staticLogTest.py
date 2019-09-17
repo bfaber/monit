@@ -70,8 +70,8 @@ for c in configs:
     count = resultsCollectionObj.count()
     resultsCollectionObj.delete_many({})
     t1 = time.time()
-    print "results collection count: " + str(count)
-    print "results collection count and clear DT: " + str(t1 - t0)
+    print c.resultsCollection + " collection count: " + str(count)
+    print c.resultsCollection + " collection count and clear DT: " + str(t1 - t0)
     
     if count == c.pythonFoundCount:
         successCt += 1

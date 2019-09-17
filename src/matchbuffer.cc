@@ -10,12 +10,15 @@ void MatchBuffer::addHandler(MatchBundle *matchHandler) {
     matchesByName[matchHandler->getConfigItem()->getCollectionName()].push_back(matchHandler);
 }
 
-void MatchBuffer::getMatchesByName(std::map<std::string, std::vector<MatchBundle*>> &ref) {
-    for(auto &kv : matchesByName) {
+std::map<std::string, std::vector<MatchBundle*>>&
+MatchBuffer::getMatchesByName() {
+    /*    for(auto &kv : matchesByName) {
 	for(auto *mb : kv.second) {
 	    ref[kv.first].push_back(mb);
 	}
-    }
+	}*/
+
+    return matchesByName;
 }
 
 void MatchBuffer::clearBuffers() {

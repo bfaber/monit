@@ -10,12 +10,13 @@
 class MatchBuffer {
  public:
     void addHandler(MatchBundle *matchbundle);    
-    void getMatchesByName(std::map<std::string, std::vector<MatchBundle*>> &matchesByName);
+    //void getMatchesByName(std::map<std::string, std::vector<MatchBundle*>> &matchesByName);
+    std::map<std::string, std::vector<MatchBundle*>>& getMatchesByName();
     void clearBuffers();
     size_t size();
     
  private:
     std::map<std::string, std::vector<MatchBundle*>> matchesByName;
-    int count;
+
 };
 #endif

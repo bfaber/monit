@@ -1,8 +1,9 @@
 #include "filebundle.h"
 
-FileBundle::FileBundle(std::string filen) : fileObj(filen),
-					    filename(filen),
-					    charCt(0) {}
+FileBundle::FileBundle(std::string filen) : filename(filen),
+					    charCt(0) {
+    fileObj = new FileObject(filen);
+}
 
 
 void FileBundle::addBundle(MatchBundle *mb) {
@@ -21,7 +22,7 @@ std::vector<MatchBundle*>& FileBundle::getBundles() {
     return bundles;
 }
 
-FileObject& FileBundle::getFileHandler() {
+FileObject* FileBundle::getFileHandler() {
     return fileObj;
 }
 
