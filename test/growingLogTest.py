@@ -30,31 +30,46 @@ for doc in docs:
     resultsCollection = doc['collectionName']
 
 t0 = time.time()
-
+lineCt = 0
 # start the logreading proc first, then the log gen proc
-logReadProc = subprocess.Popen("src/monit -h 127.0.0.1 -p 27017 -d test -c testConfig", shell=True)
+logReadProc = subprocess.Popen("src/monit -h 127.0.0.1 -p 27017 -d test -c testMovingConfig", shell=True)
+
 print "logread is open"
 logGenProc  = subprocess.Popen("test/logGenerator.py", stdout=subprocess.PIPE, shell=True)
 print "loggen is open"
-try:
-    outs, errs = logGenProc.communicate(timeout=5)
 
-    for l in outs:
+stdout, stderr = logGenProc.communicate(timeout=5)
+print "done comm"
+line = ""
+for l in stdout:
+    line += l
+    if l == '\n':
+        print line.rstrip()
         if "Done Logging, logged" in l:
             p = re.compile("\d+")
-            val = p.findall(l)[0]
-            print "lines parsed: " + val
-        
-    print "sleeping 3 seconds..."
-    time.sleep(3)
-    logReadProc.kill()
-    print "killed monit"
+            lineCt = p.findall(l)[0]
+            print "lines parsed: " + lineCt
 
-except TimeoutExpired:
-    logGenProc.kill()
-    logReadProc.kill()
-    outs, errs = logGenProc.communicate()
+print "sleeping 1 second..."
+time.sleep(1)
+logReadProc.kill()
+print "killed monit"
 
+# how to validate:
+# compare db.collection.count() to the line count above
+dbCount = testdb["testMovingData"].count()
+if lineCt == dbCount:
+    print "TEST SUCCESSFUL!"
+else:
+    print "TEST UNSUCCESSFUL!"
+    print "parsed line count: " + str(lineCt)
+    print "db line count: " + str(dbCount)
 
-
+# cleanup:
+testdb["testMovingData"].delete_many({})
+dbCount = testdb["testMovingData"].count()
+if dbCount != 0:
+    print "delete testMovingData data failed"
+else:
+    print "cleanup successful"
 

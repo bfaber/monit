@@ -48,17 +48,14 @@ LogReaderNew::LogReaderNew(std::vector<ConfigItem*> *cfgs, RecordProcessorInterf
 bool LogReaderNew::readFiles() {
     // map<filename, vec<regexmatches>>
     // map<filename, FileBundle>
-    printf("readFiles\n");
+
     bool addedGroups = false;
     for( auto &kv : matchBundlesPerFilename ) {
 	std::string filename = kv.first;
 	FileBundle *filebundle = kv.second;
 	std::vector<MatchBundle*> bundles = filebundle->getBundles();
 	FileObject *fileHandler = filebundle->getFileHandler(); // works
-	
-	printf("Copy ctor on filehandler? %s\n", fileHandler->getFileName().c_str());
-	printf("Copy ctor on filehandler? %p\n", &fileHandler);
-	
+		
 	// the logreader process should be able to run without existence of
 	// log files.  Those processes might be yet to be started.
 	// todo: we might want to complain if log dne (configurable)
@@ -71,11 +68,11 @@ bool LogReaderNew::readFiles() {
 
 	if(fileHandler->openFile()) {
 	    long t0 = Util::timeMs();
-	    int linect = 0;
+
 	    fileHandler->resume();
 	    std::string buffer;
 	    while( fileHandler->getLine(buffer) ) {
-		linect++;
+
 		for( auto *mb : bundles ) {
 		    /*
 		     * captures is a strange usage by pcre, must be size multiple of 3, 
@@ -102,7 +99,6 @@ bool LogReaderNew::readFiles() {
 		buffer.clear();
 	    }
 	    buffer.clear();
-	    printf("lineCt: %d\n", linect);
 	    long t1 = Util::timeMs();
 	    printf("logfileRead %s:DT: %ldms\n", filename.c_str(), (t1 - t0));
 	    // receiveMatches now just triggers the processing of the matches in the

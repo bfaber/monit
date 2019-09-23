@@ -26,7 +26,7 @@ void LogReaderExecutor::operator()() {
 	    // Would be awesome too to have feedback from the db committing and get some
 	    // automated optimisation with that.
 	    // but maybe it is better to keep the usages here easy to reason about at least for now
-	    Util::sleepMs(10);
+	    Util::sleepMs(100);
 	}
     }
 }

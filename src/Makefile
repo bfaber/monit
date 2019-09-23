@@ -14,7 +14,7 @@ BSON_INC=/usr/local/include/libbson-1.0
 LIBS = -lpcre -lmongoc-1.0 -lbson-1.0 -lgtest 
 LIB_DIR = -L$(GTEST_LIB_DIR)
 
-CFLAGS = -g -Wall -std=c++11 -I$(INC_DIR) -I$(PCRE_INC) -I$(GTEST_INC) -I$(MONGO_INC) \
+CFLAGS = -g -Wall -std=c++14 -I$(INC_DIR) -I$(PCRE_INC) -I$(GTEST_INC) -I$(MONGO_INC) \
 -I$(BSON_INC)
 
 _DEPS = logreadernew.h mongorecordprocessor.h util.h mongointerface.h mongospooler.h configitem.h matchprocessor.h matchbundle.h record.h filereader.h textparser.h logreaderexecutor.h processorexecutor.h filebundle.h fileobject.h

@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <getopt.h>
 #include <vector>
+#include <memory>
+#include <cstdio>
+
 #include "logreadernew.h"
 #include "mongorecordprocessor.h"
 #include "logreaderexecutor.h"
@@ -18,6 +21,8 @@ int main(int argc, char** argv) {
     std::string logfile;
     std::string regex;
     std::string csv;
+    int transactionSize;
+    
     // parse options
     // works with both -h 127.0.0.1 and -h=127.0.0.1 
     while(1) {
@@ -29,11 +34,12 @@ int main(int argc, char** argv) {
 	       {"logfile", optional_argument, 0, 'l'},
 	       {"regex", optional_argument, 0, 'r'},
 	       {"csv", optional_argument, 0, 's'},
+	       {"txn_size", optional_argument, 0, 't'},
 	       {0,0,0,0}
 	};
 
 	int opt_index = 0;
-	option = getopt_long(argc, argv, "s:d:h:p:l:r:c:", long_options, &opt_index);
+	option = getopt_long(argc, argv, "s:d:h:p:l:r:c:t:", long_options, &opt_index);
 
 	if(option == -1)
 	    break;
@@ -67,6 +73,10 @@ int main(int argc, char** argv) {
 	    printf("csv: %s\n", optarg);
 	    csv = std::string(optarg);
 	    break;
+	  case 't':
+	    printf("txn_size: %s\n", optarg);
+	    transactionSize = atoi(optarg);
+	    break;
 
 	  default:
 	    break;
@@ -98,7 +108,8 @@ int main(int argc, char** argv) {
     
     
     // pull config from the db.
-    auto *mi = new MongoInterface(mongohost, mongoport, dbName);
+    //    auto mi = std::make_unique<MongoInterface>(mongohost, mongoport, dbName, transactionSize);
+    auto *mi = new MongoInterface(mongohost, mongoport, dbName, transactionSize);
     auto *ms = new MongoSpooler(mi);
     std::vector<ConfigItem*> *configs;
     try {
@@ -106,6 +117,11 @@ int main(int argc, char** argv) {
     } catch(const std::runtime_error &re) {
 	printf("%s\n", re.what());
 	return(1);
+    }
+
+    if( configs->size() == 0 ) {
+	printf("ERROR: no parseable config info in %s collection\n", configCollectionName.c_str());
+	return 0;	
     }
 
     // this setup allows easier refactor to have multiple log readers per log processor
@@ -126,7 +142,7 @@ int main(int argc, char** argv) {
     // the mongo match consumer thread starts first.
     // thread executors manage starting and stopping of threads here. 
     //    lr->readFiles(); //logreaderexecutor thread running, probably after the mongo/matchprocessor thread is running
-    //        rp->processMatches();
-    //ms->commitToMongo();
+    //    rp->processMatches();
+    //    ms->commitToMongo();
     return 0;
 }

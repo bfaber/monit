@@ -5,10 +5,11 @@ import json
 import uuid
 import time
 
-logging.basicConfig(filename='/Users/bfaber/Desktop/play/cpp/monit/test/testing.log',level=logging.DEBUG,format='%(asctime)s %(levelname)s %(message)s')
+filename = '/Users/bfaber/Desktop/play/cpp/monit/test/testing.log'
+logging.basicConfig(filename='/Users/bfaber/Desktop/play/cpp/monit/test/testing.log', level=logging.DEBUG, format='%(asctime)s %(levelname)s %(message)s')
 
 print "Start Log..."
-numLines = 3000
+numLines = 100
 for i in range(0,numLines):
     anId = str(uuid.uuid1())
     someObj = { "userId": anId }
@@ -20,4 +21,10 @@ for i in range(0,numLines):
     print "logging stmt: " + str(jsonObj)
 #    time.sleep(.001)
     
-print "Done Logging, logged " + str(numLines) + " lines"
+lineCt = 0
+logfile = open(filename, 'r')
+for l in logfile:
+    lineCt += 1
+
+
+print "Done Logging, logged " + str(lineCt) + " lines"

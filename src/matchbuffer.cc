@@ -12,12 +12,6 @@ void MatchBuffer::addHandler(MatchBundle *matchHandler) {
 
 std::map<std::string, std::vector<MatchBundle*>>&
 MatchBuffer::getMatchesByName() {
-    /*    for(auto &kv : matchesByName) {
-	for(auto *mb : kv.second) {
-	    ref[kv.first].push_back(mb);
-	}
-	}*/
-
     return matchesByName;
 }
 
@@ -30,6 +24,7 @@ void MatchBuffer::clearBuffers() {
 }
 
 // how many records have we accrued
+// only used by tests...
 size_t MatchBuffer::size() {
     size_t count = 0;
     for( auto &kv : matchesByName ) {
@@ -39,3 +34,4 @@ size_t MatchBuffer::size() {
     }
     return count;
 }
+

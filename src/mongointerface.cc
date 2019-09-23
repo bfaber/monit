@@ -2,8 +2,11 @@
 
 #include "mongointerface.h"
 
-//TODO: make this a singleton
-MongoInterface::MongoInterface(std::string host, int port, std::string db) : dbName(db) {
+MongoInterface::MongoInterface(std::string host,
+			       int port,
+			       std::string db,
+			       size_t txnSize) : dbName(db),
+						 txnSize(txnSize) {
 
     
     // if there are issues with this, might have to rebuild the driver:

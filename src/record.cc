@@ -21,6 +21,7 @@ void Record::addRecords(std::vector<MatchBundle*> &mbs) {
 	// the doc captures the values from the matchbundle
 	ConfigItem *config = mb->getConfigItem();
 	for(auto group : mb->getBundle()) {
+	    // TODO: ensure doc is not > txnSize
 	    bson_t *doc = zipUpCsvWithGroups(config->getCsv(), group);
 	    docs.push_back(doc);
 	}	

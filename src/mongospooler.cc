@@ -12,8 +12,9 @@ void MongoSpooler::enqueue(std::vector<Record*> &recs) {
 // take the collection name, the pairs, and insert into mongo.
 int MongoSpooler::commitToMongo() {
     printf("CommitToMongo %lu records\n", recordQueue.size());
-    // TODO: handle mongo 16MB transaction limit here:
-    // test in the record iterating loop in the interface, 
+    // TODO: handle mongo 16MB transaction limit here?
+    // test in the record iterating loop in the interface,
+    // would be good to only send in the txnSize limit worth of records here
     int result = interface->insertRecords(recordQueue);
     printf("commit to mongo result: %d\n", result);
     // clear recordQueue

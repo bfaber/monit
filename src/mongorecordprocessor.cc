@@ -21,11 +21,9 @@ size_t MongoRecordProcessor::getMatchBufferSize() {
 // processor thread might be running, hence mutex on recBuffer
 // This is happening in context of the filereader thread.
 void MongoRecordProcessor::receiveMatches() {
-    printf("flush matchbundle buffers\n");
-    printf("processmatches matchbuffer size: %lu\n", matchBuffer.size());
+    
+    //printf("Flush match buffers; size: %lu\n", matchBuffer.size());
 
-    // TODO: why do this...
-    //std::map<std::string, std::vector<MatchBundle*>> bundlesByName;
     auto &bundlesByName = matchBuffer.getMatchesByName();
 
     std::map<std::string, Record*> recordsByName;
