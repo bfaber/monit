@@ -1,6 +1,8 @@
 #include "testprocessor.h"
 
-TestProcessor::TestProcessor(MongoSpooler *ts) : spooler(ts) {}
+TestProcessor::TestProcessor(std::unique_ptr<MongoSpooler> ts) : spooler(std::move(ts)) {}
+
+TestProcessor::TestProcessor(TestProcessor&& from) : spooler(std::move(from.spooler)) {};
 
 void TestProcessor::addMatchHandler(MatchBundle *mb) {
     testmatches.push_back(mb);

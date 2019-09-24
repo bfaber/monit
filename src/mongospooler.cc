@@ -1,7 +1,10 @@
 #include "mongospooler.h"
 
-MongoSpooler::MongoSpooler(MongoInterface *mi) : interface(mi) {
-}
+//MongoSpooler::MongoSpooler(MongoInterface *mi) : interface(mi) {}
+
+MongoSpooler::MongoSpooler(std::unique_ptr<MongoInterface> mi) : interface(std::move(mi)) {}
+
+MongoSpooler::MongoSpooler(MongoSpooler&& from) : interface(std::move(from.interface)) {}
 
 void MongoSpooler::enqueue(std::vector<Record*> &recs) {
     for(auto *rec : recs) {

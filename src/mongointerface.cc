@@ -18,6 +18,11 @@ MongoInterface::MongoInterface(std::string host,
     mongoUri = ss.str();
 }
 
+MongoInterface::MongoInterface(MongoInterface&& from) : dbName(from.dbName),
+							txnSize(from.txnSize) {
+    mongoUri = from.mongoUri;
+}
+
 MongoInterface::~MongoInterface() {
     mongoc_cleanup();
 }

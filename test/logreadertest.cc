@@ -102,17 +102,22 @@ TEST_F(LogReaderNewTest, CheckRegexParsingFileTwo) {
 }
 
 TEST_F(LogReaderNewTest, CheckProcessorReceivesMatches) {
-    auto *testspool = new TestSpooler();
-    auto *testproc = new TestProcessor(testspool);
+
+    //    auto processor = std::make_unique<TestProcessor>(std::move(testspool));
+    //    std::shared_ptr<TestProcessor> processor(new TestProcessor());
+    auto testspool = std::make_unique<TestSpooler>();
+    auto processor = std::make_unique<TestProcessor>(std::move(testspool));
+    auto processorRef = processor.get();
+    
     std::vector<ConfigItem*> *configs = new std::vector<ConfigItem*>();
     configs->push_back(ci);
 
-    auto *reader = new LogReaderNew(configs, testproc);
-    
+    auto reader = std::make_unique<LogReaderNew>(configs, std::move(processor));
+
     reader->readFiles();
 
     std::vector<MatchBundle*> bundles;
-    testproc->getMatches(bundles);
+    processorRef->getMatches(bundles);
     ASSERT_EQ(1, bundles.size());
 
     std::vector<std::vector<std::string>> captures = bundles[0]->getBundle();
@@ -120,8 +125,11 @@ TEST_F(LogReaderNewTest, CheckProcessorReceivesMatches) {
 }
 
 TEST_F(LogReaderNewTest, CheckProcessorReceivesMatchesTwoFiles) {
-    auto *testspool = new TestSpooler();
-    auto *testproc = new TestProcessor(testspool);
+
+    auto testspool = std::make_unique<TestSpooler>();
+    auto processor = std::make_unique<TestProcessor>(std::move(testspool));
+    auto processorRef = processor.get();
+
     std::vector<ConfigItem*> *configs = new std::vector<ConfigItem*>();
     configs->push_back(ci);
     auto *ci2 = new ConfigItem();
@@ -133,13 +141,12 @@ TEST_F(LogReaderNewTest, CheckProcessorReceivesMatchesTwoFiles) {
     ci2->setCollectionName("testMovingLogData");
     configs->push_back(ci2);
 
-    auto *reader = new LogReaderNew(configs, testproc);
-
+    auto reader = std::make_unique<LogReaderNew>(configs, std::move(processor));
     
     reader->readFiles();
 
     std::vector<MatchBundle*> bundles;
-    testproc->getMatches(bundles);
+    processorRef->getMatches(bundles);
     ASSERT_EQ(2, bundles.size());
 
     std::vector<std::vector<std::string>> captures = bundles[0]->getBundle();
@@ -151,13 +158,17 @@ TEST_F(LogReaderNewTest, CheckProcessorReceivesMatchesTwoFiles) {
 TEST_F(LogReaderNewTest, CheckProcessorProcessesMatches) {
     // TODO: use c++17 filesystem for nicer things
     //    EXPECT_TRUE(std::filesystem::exists(file));
+
     std::vector<ConfigItem*> *configs = new std::vector<ConfigItem*>();
     configs->push_back(ci);
-    //    auto *testmongo = new TestMongoInterface();
-    auto *testspool = new TestSpooler();
-    auto *processor = new MongoRecordProcessor(testspool);
-    auto *reader = new LogReaderNew(configs, processor);
 
+    auto testspool = std::make_unique<TestSpooler>();
+    auto testspoolRef = testspool.get();
+    auto processor = std::make_unique<MongoRecordProcessor>(std::move(testspool));
+    auto processorRef = processor.get();
+    auto reader    = std::make_unique<LogReaderNew>(configs, std::move(processor));
+
+    
     std::ifstream f(file.c_str());
     ASSERT_TRUE(f.good());        
 
@@ -165,10 +176,10 @@ TEST_F(LogReaderNewTest, CheckProcessorProcessesMatches) {
 
     // after readfiles completes, receiveMatches was called, copying
     // everything out of the match bundle buffers
-    EXPECT_EQ(0, processor->getMatchBufferSize());
+    EXPECT_EQ(0, processorRef->getMatchBufferSize());
     
-    processor->processMatches();
-    ASSERT_EQ(1, testspool->recordQueueTest.size());
+    processorRef->processMatches();
+    ASSERT_EQ(1, testspoolRef->recordQueueTest.size());
 
     // this should produce some results in mongo.
     // probably don't want to test that here.
@@ -176,7 +187,7 @@ TEST_F(LogReaderNewTest, CheckProcessorProcessesMatches) {
     // and verify the records produced. 
     //    csv->processMatches();
     // using testspooler to get to records right before mongo.
-    Record* rec = testspool->recordQueueTest[0];
+    Record* rec = testspoolRef->recordQueueTest[0];
     ASSERT_NE(nullptr, rec);
     ASSERT_NE(rec->getDocs(), nullptr);
     const bson_t *doc = rec->getDocs()[0];
@@ -203,24 +214,26 @@ TEST_F(LogReaderNewTest, CheckReaderMultipleCallsToReadFiles) {
     std::vector<ConfigItem*> *configs = new std::vector<ConfigItem*>();
     configs->push_back(ci);
     //    auto *testmongo = new TestMongoInterface();
-    auto *testspool = new TestSpooler();
-    auto *processor = new MongoRecordProcessor(testspool);
-    auto *reader = new LogReaderNew(configs, processor);
+    auto testspool = std::make_unique<TestSpooler>();
+    auto testspoolRef = testspool.get();
+    auto processor = std::make_unique<MongoRecordProcessor>(std::move(testspool));
+    auto processorRef = processor.get();
+    auto reader    = std::make_unique<LogReaderNew>(configs, std::move(processor));
 
     std::ifstream f(file.c_str());
     ASSERT_TRUE(f.good());        
 
     reader->readFiles();
 
-    EXPECT_EQ(0, processor->getMatchBufferSize());
+    EXPECT_EQ(0, processorRef->getMatchBufferSize());
     
     reader->readFiles(); // shouldnt get more matches.
-    EXPECT_EQ(0, processor->getMatchBufferSize()); // gets cleared on receiveMatches
-    processor->processMatches(); // converts matches into records
-    ASSERT_EQ(1, testspool->size()); 
+    EXPECT_EQ(0, processorRef->getMatchBufferSize()); // gets cleared on receiveMatches
+    processorRef->processMatches(); // converts matches into records
+    ASSERT_EQ(1, testspoolRef->size()); 
 
     
-    Record* rec = testspool->recordQueueTest[0];    
+    Record* rec = testspoolRef->recordQueueTest[0];    
     EXPECT_EQ(50787, rec->size());
 }
 
@@ -241,9 +254,11 @@ TEST_F(LogReaderNewTest, CheckProcessorProcessesMatchesTwoFiles) {
     configs->push_back(ci2);
 
     //    auto *testmongo = new TestMongoInterface();
-    auto *testspool = new TestSpooler();
-    auto *processor = new MongoRecordProcessor(testspool);
-    auto *reader = new LogReaderNew(configs, processor);
+    auto testspool = std::make_unique<TestSpooler>();
+    auto testspoolRef = testspool.get();
+    auto processor = std::make_unique<MongoRecordProcessor>(std::move(testspool));
+    auto processorRef = processor.get();
+    auto reader    = std::make_unique<LogReaderNew>(configs, std::move(processor));
 
     std::ifstream f(file.c_str());
     ASSERT_TRUE(f.good());
@@ -252,10 +267,10 @@ TEST_F(LogReaderNewTest, CheckProcessorProcessesMatchesTwoFiles) {
 
     reader->readFiles();
 
-    EXPECT_EQ(0, processor->getMatchBufferSize());
+    EXPECT_EQ(0, processorRef->getMatchBufferSize());
     
-    processor->processMatches();
-    ASSERT_EQ(2, testspool->recordQueueTest.size());
+    processorRef->processMatches();
+    ASSERT_EQ(2, testspoolRef->recordQueueTest.size());
 
     // this should produce some results in mongo.
     // probably don't want to test that here.
@@ -263,8 +278,8 @@ TEST_F(LogReaderNewTest, CheckProcessorProcessesMatchesTwoFiles) {
     // and verify the records produced. 
     //    csv->processMatches();
     // using testspooler to get to records right before mongo.
-    ASSERT_EQ(2, testspool->size());
-    for( auto *rec : testspool->recordQueueTest ) {
+    ASSERT_EQ(2, testspoolRef->size());
+    for( auto *rec : testspoolRef->recordQueueTest ) {
 	if( rec->getCollectionName() == std::string("testResultData")) {
 	    ASSERT_EQ(rec->getCollectionName(), "testResultData");
 	    ASSERT_EQ(rec->size(), 50787);
@@ -305,19 +320,21 @@ TEST_F(LogReaderNewTest, CheckProcessorProcessesMatchesMultipleLogFilesOneDNE) {
     configs->push_back(ci2);
 
     //    auto *testmongo = new TestMongoInterface();
-    auto *testspool = new TestSpooler();
-    auto *processor = new MongoRecordProcessor(testspool);
-    auto *reader = new LogReaderNew(configs, processor);
+    auto testspool = std::make_unique<TestSpooler>();
+    auto testspoolRef = testspool.get();
+    auto processor = std::make_unique<MongoRecordProcessor>(std::move(testspool));
+    auto processorRef = processor.get();
+    auto reader    = std::make_unique<LogReaderNew>(configs, std::move(processor));
 
     std::ifstream f(file.c_str());
     ASSERT_TRUE(f.good());        
 
     reader->readFiles();
     
-    EXPECT_EQ(0, processor->getMatchBufferSize());
+    EXPECT_EQ(0, processorRef->getMatchBufferSize());
     
-    processor->processMatches();
-    ASSERT_EQ(1, testspool->recordQueueTest.size());
+    processorRef->processMatches();
+    ASSERT_EQ(1, testspoolRef->recordQueueTest.size());
 
     // this should produce some results in mongo.
     // probably don't want to test that here.
@@ -325,8 +342,8 @@ TEST_F(LogReaderNewTest, CheckProcessorProcessesMatchesMultipleLogFilesOneDNE) {
     // and verify the records produced. 
     //    csv->processMatches();
     // using testspooler to get to records right before mongo.
-    ASSERT_EQ(testspool->size(), 1);    
-    Record* rec = testspool->recordQueueTest[0];
+    ASSERT_EQ(testspoolRef->size(), 1);    
+    Record* rec = testspoolRef->recordQueueTest[0];
     ASSERT_EQ(rec->getCollectionName(), "testResultData");
     ASSERT_NE(nullptr, rec);
     ASSERT_NE(rec->getDocs(), nullptr);
@@ -352,16 +369,18 @@ TEST_F(LogReaderNewTest, CheckProcessesMatchesLogFileDNE) {
     configs->push_back(ci2);
 
     //    auto *testmongo = new TestMongoInterface();
-    auto *testspool = new TestSpooler();
-    auto *processor = new MongoRecordProcessor(testspool);
-    auto *reader = new LogReaderNew(configs, processor);
+    auto testspool = std::make_unique<TestSpooler>();
+    auto testspoolRef = testspool.get();
+    auto processor = std::make_unique<MongoRecordProcessor>(std::move(testspool));
+    auto processorRef = processor.get();
+    auto reader    = std::make_unique<LogReaderNew>(configs, std::move(processor));    
 
     reader->readFiles();
 
-    EXPECT_EQ(0, processor->getMatchBufferSize());
+    EXPECT_EQ(0, processorRef->getMatchBufferSize());
     
-    processor->processMatches();
-    ASSERT_EQ(0, testspool->recordQueueTest.size());
+    processorRef->processMatches();
+    ASSERT_EQ(0, testspoolRef->recordQueueTest.size());
 
     // this should produce some results in mongo.
     // probably don't want to test that here.
@@ -369,7 +388,7 @@ TEST_F(LogReaderNewTest, CheckProcessesMatchesLogFileDNE) {
     // and verify the records produced. 
     //    csv->processMatches();
     // using testspooler to get to records right before mongo.
-    ASSERT_EQ(0, testspool->size());
+    ASSERT_EQ(0, testspoolRef->size());
 }
 
 TEST_F(LogReaderNewTest, UtilStringSplitTest)  {

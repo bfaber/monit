@@ -1,10 +1,14 @@
 
 #include "mongorecordprocessor.h"
 
-MongoRecordProcessor::MongoRecordProcessor(MongoSpooler *ms) : spooler(ms) {
+MongoRecordProcessor::MongoRecordProcessor(std::unique_ptr<MongoSpooler> ms) : spooler(std::move(ms)) {
     //mutex = new std::mutex();
 }
 
+MongoRecordProcessor::MongoRecordProcessor(MongoRecordProcessor&& from) : spooler(std::move(from.spooler)) {
+    // leave empty for now, only moved on startup before anything created
+
+}
 // sharing ownership of these matchbundles with the logreader.
 // long lived and the matchbuffer will take the matches and buffer
 // them up on those bundles.

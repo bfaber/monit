@@ -10,7 +10,8 @@
 
 class TestProcessor : public RecordProcessorInterface {
 public:
-    TestProcessor(MongoSpooler *ms);
+    TestProcessor(std::unique_ptr<MongoSpooler> ms);
+    TestProcessor(TestProcessor&& other);
     virtual void addMatchHandler(MatchBundle *mb) override;
     virtual void receiveMatches() override;
     virtual bool processMatches() override;
@@ -20,6 +21,6 @@ public:
 private:
     const char* csv;
     std::vector<MatchBundle*> testmatches;
-    MongoSpooler *spooler;
+    std::unique_ptr<MongoSpooler> spooler;
 };
 #endif

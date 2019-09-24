@@ -18,7 +18,9 @@
  */
 class MongoRecordProcessor : public RecordProcessorInterface {
  public:
-    MongoRecordProcessor(MongoSpooler *ms);
+
+    MongoRecordProcessor(std::unique_ptr<MongoSpooler> ms);
+    MongoRecordProcessor(MongoRecordProcessor&& from);
 
     virtual void addMatchHandler(MatchBundle *mb) override;
     virtual void receiveMatches() override;
@@ -29,6 +31,6 @@ class MongoRecordProcessor : public RecordProcessorInterface {
     std::mutex mutex;
     MatchBuffer matchBuffer;
     std::vector<Record*> recBuffer;
-    MongoSpooler *spooler;
+    std::unique_ptr<MongoSpooler> spooler;
 };
 #endif

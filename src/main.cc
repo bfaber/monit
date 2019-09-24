@@ -108,9 +108,9 @@ int main(int argc, char** argv) {
     
     
     // pull config from the db.
-    //    auto mi = std::make_unique<MongoInterface>(mongohost, mongoport, dbName, transactionSize);
-    auto *mi = new MongoInterface(mongohost, mongoport, dbName, transactionSize);
-    auto *ms = new MongoSpooler(mi);
+    auto mi = std::make_unique<MongoInterface>(mongohost, mongoport, dbName, transactionSize);
+    auto ms = std::make_unique<MongoSpooler>(std::move(mi));
+
     std::vector<ConfigItem*> *configs;
     try {
 	configs = mi->getConfigs(configCollectionName);
@@ -127,11 +127,11 @@ int main(int argc, char** argv) {
     // this setup allows easier refactor to have multiple log readers per log processor
     // actually only have one log reader but have it handle multiple files
     // and multiple regexes. 
-    auto *rp = new MongoRecordProcessor(ms);
-    auto *lr = new LogReaderNew(configs, rp);
+    auto rp = std::make_unique<MongoRecordProcessor>(std::move(ms));
+    auto lr = std::make_unique<LogReaderNew>(configs, std::move(rp));
 
-    auto *rpTh = new ProcessorExecutor(rp, ms);
-    auto *lrTh = new LogReaderExecutor(lr);
+    auto *rpTh = new ProcessorExecutor(std::move(rp), std::move(ms));
+    auto *lrTh = new LogReaderExecutor(std::move(lr));
 
     std::thread startedTh = ProcessorExecutor::start(rpTh);
     std::thread startedLrTh = LogReaderExecutor::start(lrTh);

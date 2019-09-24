@@ -2,7 +2,7 @@
 #include "util.h"
 
 std::thread ProcessorExecutor::start(ProcessorExecutor *inst) {
-    std::thread th(*inst);
+    std::thread th(std::move(*inst));
     return th;
 }
 

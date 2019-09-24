@@ -6,7 +6,7 @@ The log reader/writer is a process that will parse a log given some regular expr
 Config in the db will be a row indicating regex to be applied to each line of the log, and then the assignment of those groups to a "column" with a type.
 TODO:regex has to be clear about if greedy or not, this readme should specify and provide examples. 
 
-{matchItemName:"logins", regex:"^(//timestamp regex).*user=(//usr regex)... etc", csv:"...", collectionName:"logins", realTimeEndpoint:"http://analyticsEndpoint/logins", filename:"/path/to/the/logfile"}
+{matchItemName:"logins", regex:"^(//timestamp regex).*user=(//usr regex)... etc", csv:"timestamp,userLogin", collectionName:"logins", realTimeEndpoint:"http://analyticsEndpoint/logins", filename:"/path/to/the/logfile"}
 
 Config matchItemName should be same as collectionName (by convention), but can be different.
 The configitem will be parsed by system on startup and made available to the LogReader and CSVProcessor instances for processing.

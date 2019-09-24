@@ -7,10 +7,8 @@
 #include "filereader.h"
 #include "textparser.h"
 
-
-
-LogReaderNew::LogReaderNew(std::vector<ConfigItem*> *cfgs, RecordProcessorInterface *recprocessor) :
-    processor(recprocessor) {
+LogReaderNew::LogReaderNew(std::vector<ConfigItem*> *cfgs, std::unique_ptr<RecordProcessorInterface> recprocessor) :
+    processor(std::move(recprocessor)) {
     
     // TODO: need to parse errors if exist, and probably wrap the construction of
     // this reader so that compilation failure can be cleanly handled.
@@ -36,9 +34,12 @@ LogReaderNew::LogReaderNew(std::vector<ConfigItem*> *cfgs, RecordProcessorInterf
 	FileBundle *fb = new FileBundle(config->getFileName());
 	fb->addBundle(mb);
 	matchBundlesPerFilename[config->getFileName()] = fb;
-	recprocessor->addMatchHandler(mb);
+	processor->addMatchHandler(mb);
     }    
 }
+
+// only moveable at startup.
+LogReaderNew::LogReaderNew(LogReaderNew&& from) : processor(std::move(from.processor)) {}
 
 /**
  * Read the file line by line, parse each line with regex, capturing whatever groups exist.

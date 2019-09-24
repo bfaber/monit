@@ -10,23 +10,25 @@
 class ProcessorExecutor {
  public:
     
-     ProcessorExecutor(MongoRecordProcessor *rp, MongoSpooler *ms) : recordProcessor(rp),
-	mongoSpooler(ms),
-	stopThread(false),	
-	processorStarted(false),
-	processorStopped(false) {};
-    
-    ProcessorExecutor(ProcessorExecutor const &other) :
-	mongoSpooler(other.mongoSpooler),
-	stopThread(other.stopThread),
-	processorStarted(other.processorStarted),
-	processorStopped(other.processorStopped) { recordProcessor = other.recordProcessor; printf("copy ctor &other\n");};
-    
-    ProcessorExecutor(ProcessorExecutor&& other) : recordProcessor(other.recordProcessor),
-	mongoSpooler(other.mongoSpooler),
-	stopThread(other.stopThread),
-	processorStarted(other.processorStarted),
-						   processorStopped(other.processorStopped) { printf("move ctor &&other\n");};
+     ProcessorExecutor(std::unique_ptr<MongoRecordProcessor> rp,
+		       std::unique_ptr<MongoSpooler> ms) : recordProcessor(std::move(rp)),
+							   mongoSpooler(std::move(ms)),
+							   stopThread(false),	
+							   processorStarted(false),
+							   processorStopped(false) {};
+    /*    
+    ProcessorExecutor(ProcessorExecutor const &other) : mongoSpooler(std::move(other.mongoSpooler)),
+							stopThread(other.stopThread),
+							processorStarted(other.processorStarted),
+							processorStopped(other.processorStopped) {
+	//recordProcessor = other.recordProcessor; printf("copy ctor &other\n");
+    };
+    */  
+    ProcessorExecutor(ProcessorExecutor&& other) : recordProcessor(std::move(other.recordProcessor)),
+						   mongoSpooler(std::move(other.mongoSpooler)),
+						   stopThread(other.stopThread),
+						   processorStarted(other.processorStarted),
+						   processorStopped(other.processorStopped) {};
     
     void operator()();
     static std::thread start(ProcessorExecutor *inst);
@@ -34,8 +36,8 @@ class ProcessorExecutor {
 
 private:
     std::mutex mutex;
-    MongoRecordProcessor *recordProcessor;
-    MongoSpooler *mongoSpooler;
+    std::unique_ptr<MongoRecordProcessor> recordProcessor;
+    std::unique_ptr<MongoSpooler> mongoSpooler;
     bool processorStarted;
     bool processorStopped;
     bool stopThread;

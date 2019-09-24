@@ -9,17 +9,17 @@
 class LogReaderExecutor {
 
  public:
-    LogReaderExecutor(LogReaderNew *lr) : logreader(lr),
-					  stopThread(false),
-					  logreaderStarted(false),
-					  logreaderStopped(false) {};
-
-    LogReaderExecutor(LogReaderExecutor const &other) : logreader(other.logreader),
+    LogReaderExecutor(std::unique_ptr<LogReaderNew> lr) : logreader(std::move(lr)),
+						      stopThread(false),
+						      logreaderStarted(false),
+						      logreaderStopped(false) {};
+    /*
+    LogReaderExecutor(const LogReaderExecutor &other) : logreader(std::move(other.logreader)),
 							stopThread(other.stopThread),
 							logreaderStarted(other.logreaderStarted),
 							logreaderStopped(other.logreaderStopped) {};
-    
-    LogReaderExecutor(LogReaderExecutor&& other) : logreader(other.logreader),
+    */
+    LogReaderExecutor(LogReaderExecutor&& other) : logreader(std::move(other.logreader)),
 						   stopThread(other.stopThread),
 						   logreaderStarted(other.logreaderStarted),
 						   logreaderStopped(other.logreaderStopped) {};
@@ -29,7 +29,7 @@ class LogReaderExecutor {
 
 private:
     std::mutex mutex;
-    LogReaderNew *logreader;
+    std::unique_ptr<LogReaderNew> logreader;
     bool logreaderStarted;
     bool logreaderStopped;
     bool stopThread;

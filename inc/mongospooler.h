@@ -14,14 +14,15 @@
  */
 class MongoSpooler {
 public:
-    MongoSpooler(MongoInterface *mi);
-    
+    //MongoSpooler(MongoInterface *mi);
+    MongoSpooler(std::unique_ptr<MongoInterface> mi);
+    MongoSpooler(MongoSpooler&& from);
     virtual void enqueue(std::vector<Record*> &recs);
 
     int commitToMongo();
     
 private:
-    MongoInterface *interface;
+    std::unique_ptr<MongoInterface> interface;
     std::vector<Record*> recordQueue;    
 
 };

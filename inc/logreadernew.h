@@ -15,16 +15,19 @@
 
 class LogReaderNew {
 public:
-    LogReaderNew(std::vector<ConfigItem*>* configs, RecordProcessorInterface *p);
+
+    LogReaderNew(std::vector<ConfigItem*>* configs, std::unique_ptr<RecordProcessorInterface> p);
+    LogReaderNew(LogReaderNew&& from);
 
     bool readFiles();
     
 private:
+    void init(std::vector<ConfigItem*> *configs);
     // will batch up the configItem data per filename so that we're only opening
     // a single file per set of regex
 
     std::map<std::string, FileBundle*> matchBundlesPerFilename;
     
-    RecordProcessorInterface* processor;
+    std::unique_ptr<RecordProcessorInterface> processor;
 };
 #endif

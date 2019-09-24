@@ -3,7 +3,7 @@
 #include "util.h"
 
 std::thread LogReaderExecutor::start(LogReaderExecutor *inst) {
-    std::thread th(*inst);
+    std::thread th(std::move(*inst));
     return th;
 }
 

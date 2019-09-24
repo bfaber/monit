@@ -11,6 +11,7 @@ class MongoInterface {
 public:
     MongoInterface(std::string host, int port, std::string dbName, size_t transactionSize);
     ~MongoInterface();
+    MongoInterface(MongoInterface&& from);
     std::vector<ConfigItem*>* getConfigs(std::string collectionName);
     virtual int insertRecords(std::vector<Record*> &recs);
     
