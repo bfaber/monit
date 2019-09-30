@@ -17,12 +17,15 @@ void ProcessorExecutor::operator()() {
     processorStarted = true;
     bool stop = stopThread;
     mutex.unlock();
-
+    if( !recordProcessor ) {
+	printf("record processor is null!\n");
+	//stop();
+	stop = true;
+    }
     while( !stop ) {
+	// this will block as committing to Storage
 	if( !recordProcessor->processMatches() ) {
 	    Util::sleepMs(1);
-	} else {
-	    mongoSpooler->commitToMongo();
 	}
     }
 }

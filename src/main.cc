@@ -106,10 +106,12 @@ int main(int argc, char** argv) {
 	printf(" we dont have jit!\n");
     }
     
-    
+
+    // TODO: MongoInterface should implement a StorageInterface, which is then
+    // instantiated here based on command line args.
+    // StorageInterface implements at the least a getConfigs method.
     // pull config from the db.
     auto mi = std::make_unique<MongoInterface>(mongohost, mongoport, dbName, transactionSize);
-    auto ms = std::make_unique<MongoSpooler>(std::move(mi));
 
     std::vector<ConfigItem*> *configs;
     try {
@@ -124,13 +126,21 @@ int main(int argc, char** argv) {
 	return 0;	
     }
 
+    // TODO:  does MongoSpooler have any relationship to Mongo?  Could it just be a Spooler that is
+    // instantiated with a StorageInterface?
+    // init mongo interface first, then move it to spooler
+    auto ms = std::make_unique<MongoSpooler>(std::move(mi));
+
+    // TODO:  ditto here, what does this record processor have to do with Mongo?
     // this setup allows easier refactor to have multiple log readers per log processor
     // actually only have one log reader but have it handle multiple files
-    // and multiple regexes. 
-    auto rp = std::make_unique<MongoRecordProcessor>(std::move(ms));
-    auto lr = std::make_unique<LogReaderNew>(configs, std::move(rp));
+    // and multiple regexes.
+    // NOTE: every time a shared ptr is shared, the ref ct is ATOMICALLY incremented/dec.
+    //  not that important here, but elsewhere it will be.
+    auto rp = std::make_shared<MongoRecordProcessor>(std::move(ms));
+    auto lr = std::make_unique<LogReaderNew>(configs, rp);
 
-    auto *rpTh = new ProcessorExecutor(std::move(rp), std::move(ms));
+    auto *rpTh = new ProcessorExecutor(rp);
     auto *lrTh = new LogReaderExecutor(std::move(lr));
 
     std::thread startedTh = ProcessorExecutor::start(rpTh);

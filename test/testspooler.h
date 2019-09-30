@@ -12,7 +12,8 @@ class TestSpooler : public MongoSpooler {
  public:
     TestSpooler();
 
-    virtual void enqueue(std::vector<Record*> &recs) override;   
+    virtual void enqueue(std::vector<Record*> &recs) override;
+    virtual int  commitToMongo() override;
     std::vector<Record*> recordQueueTest;
     size_t size();
 };

@@ -16,7 +16,7 @@
 class LogReaderNew {
 public:
 
-    LogReaderNew(std::vector<ConfigItem*>* configs, std::unique_ptr<RecordProcessorInterface> p);
+    LogReaderNew(std::vector<ConfigItem*>* configs, std::shared_ptr<RecordProcessorInterface> p);
     LogReaderNew(LogReaderNew&& from);
 
     bool readFiles();
@@ -28,6 +28,6 @@ private:
 
     std::map<std::string, FileBundle*> matchBundlesPerFilename;
     
-    std::unique_ptr<RecordProcessorInterface> processor;
+    std::shared_ptr<RecordProcessorInterface> processor;
 };
 #endif

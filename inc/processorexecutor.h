@@ -10,12 +10,10 @@
 class ProcessorExecutor {
  public:
     
-     ProcessorExecutor(std::unique_ptr<MongoRecordProcessor> rp,
-		       std::unique_ptr<MongoSpooler> ms) : recordProcessor(std::move(rp)),
-							   mongoSpooler(std::move(ms)),
-							   stopThread(false),	
-							   processorStarted(false),
-							   processorStopped(false) {};
+    ProcessorExecutor(std::shared_ptr<MongoRecordProcessor> rp) : recordProcessor(rp),	       
+								  stopThread(false),	
+								  processorStarted(false),
+								  processorStopped(false) {};
     /*    
     ProcessorExecutor(ProcessorExecutor const &other) : mongoSpooler(std::move(other.mongoSpooler)),
 							stopThread(other.stopThread),
@@ -25,7 +23,6 @@ class ProcessorExecutor {
     };
     */  
     ProcessorExecutor(ProcessorExecutor&& other) : recordProcessor(std::move(other.recordProcessor)),
-						   mongoSpooler(std::move(other.mongoSpooler)),
 						   stopThread(other.stopThread),
 						   processorStarted(other.processorStarted),
 						   processorStopped(other.processorStopped) {};
@@ -36,8 +33,7 @@ class ProcessorExecutor {
 
 private:
     std::mutex mutex;
-    std::unique_ptr<MongoRecordProcessor> recordProcessor;
-    std::unique_ptr<MongoSpooler> mongoSpooler;
+    std::shared_ptr<MongoRecordProcessor> recordProcessor;
     bool processorStarted;
     bool processorStopped;
     bool stopThread;

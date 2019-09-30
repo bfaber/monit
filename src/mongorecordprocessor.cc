@@ -7,8 +7,9 @@ MongoRecordProcessor::MongoRecordProcessor(std::unique_ptr<MongoSpooler> ms) : s
 
 MongoRecordProcessor::MongoRecordProcessor(MongoRecordProcessor&& from) : spooler(std::move(from.spooler)) {
     // leave empty for now, only moved on startup before anything created
-
+    
 }
+
 // sharing ownership of these matchbundles with the logreader.
 // long lived and the matchbuffer will take the matches and buffer
 // them up on those bundles.
@@ -87,6 +88,8 @@ bool MongoRecordProcessor::processMatches() {
 	spooler->enqueue(recBuffer);
 	recBuffer.clear();
 	mutex.unlock();
+
+	spooler->commitToMongo();
 	return true;
     } else {
 	return false;

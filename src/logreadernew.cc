@@ -7,8 +7,8 @@
 #include "filereader.h"
 #include "textparser.h"
 
-LogReaderNew::LogReaderNew(std::vector<ConfigItem*> *cfgs, std::unique_ptr<RecordProcessorInterface> recprocessor) :
-    processor(std::move(recprocessor)) {
+LogReaderNew::LogReaderNew(std::vector<ConfigItem*> *cfgs, std::shared_ptr<RecordProcessorInterface> recprocessor) :
+    processor(recprocessor) {
     
     // TODO: need to parse errors if exist, and probably wrap the construction of
     // this reader so that compilation failure can be cleanly handled.

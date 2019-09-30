@@ -20,6 +20,7 @@ void LogReaderExecutor::operator()() {
     mutex.unlock();
 
     while(!stop) {
+	printf("Read all files...\n");
 	if( !logreader->readFiles() ) {
 	    // TODO: we can get nice here and throttle depending on how much we're reading and how long
 	    // it takes to read.

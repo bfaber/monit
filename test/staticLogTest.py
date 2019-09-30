@@ -71,6 +71,7 @@ for c in configs:
     resultsCollectionObj.delete_many({})
     t1 = time.time()
     print c.resultsCollection + " collection count: " + str(count)
+    print c.resultsCollection + " post clear count: " + str(resultsCollectionObj.count())
     print c.resultsCollection + " collection count and clear DT: " + str(t1 - t0)
     
     if count == c.pythonFoundCount:
@@ -81,9 +82,4 @@ if successCt == len(configs):
 else:
     print "TEST FAILED"
 
-print "cleaning up..."
-
-# then clear that collection
-
-print "done."
     

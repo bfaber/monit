@@ -14,3 +14,8 @@ void TestSpooler::enqueue(std::vector<Record*> &recs) {
 size_t TestSpooler::size() {
     return recordQueueTest.size();
 }
+
+int TestSpooler::commitToMongo() {
+    printf("CommitToMongo %d\n", size());
+    return 0;
+}

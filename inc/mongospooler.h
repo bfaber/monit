@@ -19,7 +19,7 @@ public:
     MongoSpooler(MongoSpooler&& from);
     virtual void enqueue(std::vector<Record*> &recs);
 
-    int commitToMongo();
+    virtual int commitToMongo();
     
 private:
     std::unique_ptr<MongoInterface> interface;

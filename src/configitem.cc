@@ -2,6 +2,18 @@
 #include "configitem.h"
 
 ConfigItem::ConfigItem() {}
+
+ConfigItem::ConfigItem(ConfigItem&& from) : name(std::move(from.name)),
+					    regex(std::move(from.regex)),
+					    csv(std::move(from.csv)),
+					    collectionName(std::move(from.collectionName)),
+					    httpEndpoint(std::move(from.httpEndpoint)),
+					    filename(std::move(from.filename)) {
+    pcreCompiledRegex = from.pcreCompiledRegex;
+    jitStack = from.jitStack;
+    extra    = from.extra;
+}
+					    
 // this is getting instantiated from const char*s provided by the bson mongo query,
 // so those initial values will be destroyed after this is created.
 // string allocates these char* on the heap for us, but we'll check that they're not

@@ -21,6 +21,9 @@ MongoInterface::MongoInterface(std::string host,
 MongoInterface::MongoInterface(MongoInterface&& from) : dbName(from.dbName),
 							txnSize(from.txnSize) {
     mongoUri = from.mongoUri;
+    for( auto& cfg : from.configs ) {
+	configs.push_back(std::move(cfg));
+    }
 }
 
 MongoInterface::~MongoInterface() {

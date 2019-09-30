@@ -15,7 +15,8 @@
 class ConfigItem {
 public:
     ConfigItem();
-
+    ConfigItem(ConfigItem&& from);
+    
     bool isValid();
     
     void setName(const char* n);
